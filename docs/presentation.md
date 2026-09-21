@@ -48,7 +48,7 @@
 - [x] Jev の調査([jev.md](jev.md))
 - [x] 土台: Hono + React + Workers、`/api/decide`、Playground
 - [x] ターンバトル
-- [ ] Cloudflare へデプロイ(アカウント作成と `wrangler login` 待ち)
+- [x] Cloudflare へデプロイ(https://jev-demo.hh-jev-demo.workers.dev)
 - [ ] 問い合わせフォームのデモ
 - [ ] 発表用に Claude のモデルを決める(今は動作確認のため最安の Haiku 4.5 が既定。Opus と比べると差はもっと開く見込み)
 - [ ] スライド

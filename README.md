@@ -3,6 +3,8 @@
 TypeSafe AI の **Jev**(System One Model)の「判断の速さ」を、Claude と並べて体感するデモアプリ。
 社内勉強会(2026-09-26 土)の発表用。
 
+公開URL: https://jev-demo.hh-jev-demo.workers.dev(API を使うには画面右上に合言葉を入れる)
+
 - **Playground**: 同じ状態と質問を Jev と Claude に同時に投げ、応答時間と答えを比べる
 - **ターンバトル**: ドラクエ風のバトルで Jev と Claude が同じドラゴンと同時に戦う
 - **問い合わせフォーム**(予定): 入力中にリアルタイムで振り分け・緊急度を判定
@@ -52,6 +54,8 @@ npm run dev                      # http://localhost:5173
    npx wrangler secret put ANTHROPIC_API_KEY
    npx wrangler secret put DEMO_PASSCODE   # 公開URLで使われ放題にならないよう必ず設定
    ```
+
+4. workers.dev のサブドメインを登録する(ダッシュボードの Workers のオンボーディング、または対話モードの `npm run deploy` で)
 
 以降は `npm run deploy` だけでよい。URL は `https://jev-demo.<アカウントのサブドメイン>.workers.dev`。
 合言葉は画面右上の入力欄に入れる(ブラウザに保存される)。
