@@ -1,0 +1,6 @@
+# ローカル開発用のシークレット。このファイルを .dev.vars にコピーして値を入れる。
+# 本番は `npx wrangler secret put <NAME>` で登録する。
+TYPESAFE_API_KEY=
+ANTHROPIC_API_KEY=
+# 設定するとAPI呼び出しに合言葉が必要になる(公開URLでの使われ放題対策)
+DEMO_PASSCODE=
