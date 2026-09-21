@@ -15,15 +15,32 @@ import {
 
 export type BattleMode = "turn" | "realtime";
 
+/** 画面に並べる対戦者。Claude はモデルを固定し、Opus だけ effort を選べる */
+export type SlotId = "jev" | "haiku" | "opus";
+
+export const SLOTS: Record<SlotId, { label: string; engine: Engine; model?: ClaudeModel }> = {
+  jev: { label: "Jev", engine: "jev" },
+  haiku: { label: "Claude Haiku 4.5", engine: "claude", model: "claude-haiku-4-5" },
+  opus: { label: "Claude Opus 5", engine: "claude", model: "claude-opus-5" },
+};
+
+export const SLOT_IDS = Object.keys(SLOTS) as SlotId[];
+
 export interface BattleConfig {
   difficulty: Difficulty;
   mode: BattleMode;
   /** リアルタイムモードで敵が行動する間隔 */
   enemyIntervalMs: number;
-  model: ClaudeModel;
-  effort: ClaudeEffort;
+  opusEffort: ClaudeEffort;
   seed: number;
+  /** 今回動かす対戦者。含まれない対戦者は前回の結果を残す */
+  slots: SlotId[];
 }
+
+/** その対戦がどの条件で行われたか(前回の結果と今の設定を見比べるため) */
+export type ArenaConditions = Pick<BattleConfig, "difficulty" | "mode" | "enemyIntervalMs" | "seed"> & {
+  effort?: ClaudeEffort;
+};
 
 export interface Decision {
   action: HeroAction;
@@ -41,9 +58,10 @@ export interface Arena {
   error?: string;
   startedAt: number | null;
   endedAt: number | null;
+  /** まだ一度も動かしていなければ null */
+  conditions: ArenaConditions | null;
 }
 
-const ENGINES: Engine[] = ["jev", "claude"];
 const TURN_PAUSE_MS = 400;
 const MAX_LOG = 40;
 
@@ -55,6 +73,7 @@ function freshArena(seed: number, difficulty: Difficulty = "easy"): Arena {
     thinkingSince: null,
     startedAt: null,
     endedAt: null,
+    conditions: null,
   };
 }
 
@@ -62,17 +81,18 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export function useBattle() {
   // 非同期ループからは常に最新の状態を読みたいので ref に持ち、描画は tick で起こす
-  const arenasRef = useRef<Record<Engine, Arena>>({
+  const arenasRef = useRef<Record<SlotId, Arena>>({
     jev: freshArena(1),
-    claude: freshArena(1),
+    haiku: freshArena(1),
+    opus: freshArena(1),
   });
   const [, setTick] = useState(0);
   const runIdRef = useRef(0);
   const timersRef = useRef<number[]>([]);
-  const [running, setRunning] = useState(false);
+  const [runningSlots, setRunningSlots] = useState<SlotId[]>([]);
 
-  const update = useCallback((engine: Engine, fn: (a: Arena) => Arena) => {
-    arenasRef.current = { ...arenasRef.current, [engine]: fn(arenasRef.current[engine]) };
+  const update = useCallback((slot: SlotId, fn: (a: Arena) => Arena) => {
+    arenasRef.current = { ...arenasRef.current, [slot]: fn(arenasRef.current[slot]) };
     setTick((t) => t + 1);
   }, []);
 
@@ -82,8 +102,8 @@ export function useBattle() {
   const pushLog = (a: Arena, entry: LogEntry): LogEntry[] => [...a.log, entry].slice(-MAX_LOG);
 
   const enemyTurn = useCallback(
-    (engine: Engine) =>
-      update(engine, (a) => {
+    (slot: SlotId) =>
+      update(slot, (a) => {
         if (a.state.result) return a;
         const [state, entry] = applyEnemyMove(a.state);
         return finishIfOver({ ...a, state, log: pushLog(a, entry) });
@@ -92,19 +112,20 @@ export function useBattle() {
   );
 
   const heroLoop = useCallback(
-    async (engine: Engine, runId: number, config: BattleConfig) => {
+    async (slot: SlotId, runId: number, config: BattleConfig) => {
       const alive = () => runIdRef.current === runId;
+      const { engine, model } = SLOTS[slot];
 
-      while (alive() && !arenasRef.current[engine].state.result) {
-        const snapshot = arenasRef.current[engine];
-        update(engine, (a) => ({ ...a, thinkingSince: performance.now(), error: undefined }));
+      while (alive() && !arenasRef.current[slot].state.result) {
+        const snapshot = arenasRef.current[slot];
+        update(slot, (a) => ({ ...a, thinkingSince: performance.now(), error: undefined }));
 
         let decision: Decision;
         try {
           const res = await decide({
             engine,
-            model: config.model,
-            effort: config.effort,
+            model,
+            effort: slot === "opus" ? config.opusEffort : "low",
             state: toDecisionState(snapshot.state, snapshot.log.slice(-3)),
             questions: toActionQuestion(snapshot.state),
           });
@@ -118,14 +139,14 @@ export function useBattle() {
           };
         } catch (e) {
           if (!alive()) return;
-          update(engine, (a) => ({ ...a, thinkingSince: null, error: (e as Error).message }));
+          update(slot, (a) => ({ ...a, thinkingSince: null, error: (e as Error).message }));
           await sleep(1000);
           continue;
         }
         if (!alive()) return;
 
         // リアルタイムでは考えている間に敵が動いているので、最新の状態に行動を適用する
-        update(engine, (a) => {
+        update(slot, (a) => {
           if (a.state.result) return a;
           const [state, entry] = applyHeroAction(a.state, decision.action);
           return finishIfOver({
@@ -137,10 +158,10 @@ export function useBattle() {
           });
         });
 
-        if (config.mode === "turn" && !arenasRef.current[engine].state.result) {
+        if (config.mode === "turn" && !arenasRef.current[slot].state.result) {
           await sleep(TURN_PAUSE_MS);
           if (!alive()) return;
-          enemyTurn(engine);
+          enemyTurn(slot);
           await sleep(TURN_PAUSE_MS);
         }
       }
@@ -152,46 +173,58 @@ export function useBattle() {
     runIdRef.current += 1;
     timersRef.current.forEach((t) => clearInterval(t));
     timersRef.current = [];
-    for (const engine of ENGINES) update(engine, (a) => ({ ...a, thinkingSince: null }));
-    setRunning(false);
+    for (const slot of SLOT_IDS) update(slot, (a) => ({ ...a, thinkingSince: null }));
+    setRunningSlots([]);
   }, [update]);
 
   const start = useCallback(
     (config: BattleConfig) => {
+      if (config.slots.length === 0) return;
       stop();
       const runId = runIdRef.current;
       const now = performance.now();
-      for (const engine of ENGINES) {
-        arenasRef.current[engine] = { ...freshArena(config.seed, config.difficulty), startedAt: now };
+      for (const slot of config.slots) {
+        arenasRef.current[slot] = {
+          ...freshArena(config.seed, config.difficulty),
+          startedAt: now,
+          conditions: {
+            difficulty: config.difficulty,
+            mode: config.mode,
+            enemyIntervalMs: config.enemyIntervalMs,
+            seed: config.seed,
+            effort: slot === "opus" ? config.opusEffort : undefined,
+          },
+        };
       }
       setTick((t) => t + 1);
-      setRunning(true);
+      setRunningSlots(config.slots);
 
-      for (const engine of ENGINES) {
+      for (const slot of config.slots) {
         if (config.mode === "realtime") {
           const timer = window.setInterval(() => {
-            if (runIdRef.current !== runId || arenasRef.current[engine].state.result) {
+            if (runIdRef.current !== runId || arenasRef.current[slot].state.result) {
               clearInterval(timer);
               return;
             }
-            enemyTurn(engine);
+            enemyTurn(slot);
           }, config.enemyIntervalMs);
           timersRef.current.push(timer);
         }
-        void heroLoop(engine, runId, config);
+        void heroLoop(slot, runId, config);
       }
     },
     [enemyTurn, heroLoop, stop],
   );
 
-  // 両方の決着がついたら running を戻す
+  // 今回動かした対戦者の決着がすべてついたら止める
   const arenas = arenasRef.current;
-  const allOver = ENGINES.every((e) => arenas[e].state.result);
+  const running = runningSlots.length > 0;
+  const allOver = runningSlots.every((s) => arenas[s].state.result);
   useEffect(() => {
     if (running && allOver) stop();
   }, [running, allOver, stop]);
 
   useEffect(() => stop, [stop]);
 
-  return { arenas, running, start, stop };
+  return { arenas, running, runningSlots, start, stop };
 }

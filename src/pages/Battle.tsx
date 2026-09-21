@@ -1,18 +1,20 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import {
-  CLAUDE_EFFORTS,
-  CLAUDE_MODELS,
-  type ClaudeEffort,
-  type ClaudeModel,
-  type Engine,
-} from "../../shared/decision";
+import { CLAUDE_EFFORTS, type ClaudeEffort } from "../../shared/decision";
 import { ACTIONS, ENEMY_MOVES, type Difficulty, type HeroAction } from "../battle/engine";
-import { useBattle, type Arena, type BattleMode } from "../battle/useBattle";
+import {
+  SLOT_IDS,
+  SLOTS,
+  useBattle,
+  type Arena,
+  type ArenaConditions,
+  type BattleMode,
+  type SlotId,
+} from "../battle/useBattle";
 
 /** 難易度ごとのおすすめ設定。難易度を切り替えるとこれが入る(その後は個別に変えられる) */
-const PRESETS: Record<Difficulty, { mode: BattleMode; model: ClaudeModel; effort: ClaudeEffort }> = {
-  easy: { mode: "realtime", model: "claude-haiku-4-5", effort: "low" },
-  hard: { mode: "turn", model: "claude-opus-5", effort: "medium" },
+const PRESETS: Record<Difficulty, { mode: BattleMode; opusEffort: ClaudeEffort }> = {
+  easy: { mode: "realtime", opusEffort: "low" },
+  hard: { mode: "turn", opusEffort: "medium" },
 };
 
 const DIFFICULTY_NOTE: Record<Difficulty, string> = {
@@ -20,21 +22,32 @@ const DIFFICULTY_NOTE: Record<Difficulty, string> = {
   hard: "予告なし。敵は決まった周期で行動するが、中身は行動履歴から読むしかない。渡すのは生の数値だけ。",
 };
 
+const ACCENTS: Record<SlotId, string> = {
+  jev: "text-amber-300",
+  haiku: "text-sky-300",
+  opus: "text-violet-300",
+};
+
+const DIFFICULTY_LABEL: Record<Difficulty, string> = { easy: "かんたん", hard: "むずかしい" };
+const MODE_LABEL: Record<BattleMode, string> = { realtime: "リアルタイム", turn: "ターン制" };
+
 export function Battle() {
-  const { arenas, running, start, stop } = useBattle();
+  const { arenas, running, runningSlots, start, stop } = useBattle();
   const [difficulty, setDifficulty] = useState<Difficulty>("easy");
   const [mode, setMode] = useState<BattleMode>(PRESETS.easy.mode);
   const [enemyIntervalMs, setEnemyIntervalMs] = useState(1000);
-  const [model, setModel] = useState<ClaudeModel>(PRESETS.easy.model);
-  const [effort, setEffort] = useState<ClaudeEffort>(PRESETS.easy.effort);
+  const [opusEffort, setOpusEffort] = useState<ClaudeEffort>(PRESETS.easy.opusEffort);
   const [seed, setSeed] = useState(() => Math.floor(Math.random() * 100000));
+  const [selected, setSelected] = useState<Record<SlotId, boolean>>({ jev: true, haiku: true, opus: true });
 
   const chooseDifficulty = (d: Difficulty) => {
     setDifficulty(d);
     setMode(PRESETS[d].mode);
-    setModel(PRESETS[d].model);
-    setEffort(PRESETS[d].effort);
+    setOpusEffort(PRESETS[d].opusEffort);
   };
+
+  const slots = SLOT_IDS.filter((id) => selected[id]);
+  const current: ArenaConditions = { difficulty, mode, enemyIntervalMs, seed };
 
   return (
     <div className="space-y-5">
@@ -47,7 +60,7 @@ export function Battle() {
               onClick={() => chooseDifficulty(d)}
               className={`px-3 py-1.5 ${difficulty === d ? "bg-rose-400 text-slate-950" : "text-slate-300"}`}
             >
-              {d === "easy" ? "かんたん" : "むずかしい"}
+              {DIFFICULTY_LABEL[d]}
             </button>
           ))}
         </div>
@@ -59,7 +72,7 @@ export function Battle() {
               onClick={() => setMode(m)}
               className={`px-3 py-1.5 ${mode === m ? "bg-amber-400 text-slate-950" : "text-slate-300"}`}
             >
-              {m === "realtime" ? "リアルタイム" : "ターン制"}
+              {MODE_LABEL[m]}
             </button>
           ))}
         </div>
@@ -79,34 +92,6 @@ export function Battle() {
           </label>
         )}
         <label className="text-slate-400">
-          Claude{" "}
-          <select
-            value={model}
-            disabled={running}
-            onChange={(e) => setModel(e.target.value as ClaudeModel)}
-            className="ml-1 rounded bg-slate-900 px-2 py-1 text-slate-100 ring-1 ring-slate-700"
-          >
-            {CLAUDE_MODELS.map((m) => (
-              <option key={m}>{m}</option>
-            ))}
-          </select>
-        </label>
-        {model !== "claude-haiku-4-5" && (
-          <label className="text-slate-400">
-            effort{" "}
-            <select
-              value={effort}
-              disabled={running}
-              onChange={(e) => setEffort(e.target.value as ClaudeEffort)}
-              className="ml-1 rounded bg-slate-900 px-2 py-1 text-slate-100 ring-1 ring-slate-700"
-            >
-              {CLAUDE_EFFORTS.map((e) => (
-                <option key={e}>{e}</option>
-              ))}
-            </select>
-          </label>
-        )}
-        <label className="text-slate-400">
           シード{" "}
           <input
             type="number"
@@ -116,14 +101,46 @@ export function Battle() {
             className="ml-1 w-24 rounded bg-slate-900 px-2 py-1 text-slate-100 ring-1 ring-slate-700"
           />
         </label>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-3 text-sm">
+        <span className="text-slate-400">動かす</span>
+        {SLOT_IDS.map((id) => (
+          <label key={id} className="flex items-center gap-1.5">
+            <input
+              type="checkbox"
+              checked={selected[id]}
+              disabled={running}
+              onChange={(e) => setSelected((s) => ({ ...s, [id]: e.target.checked }))}
+              className="accent-amber-400"
+            />
+            <span className={ACCENTS[id]}>{SLOTS[id].label}</span>
+            {id === "opus" && (
+              <select
+                value={opusEffort}
+                disabled={running}
+                onChange={(e) => setOpusEffort(e.target.value as ClaudeEffort)}
+                className="ml-1 rounded bg-slate-900 px-1.5 py-0.5 text-slate-100 ring-1 ring-slate-700"
+                title="effort"
+              >
+                {CLAUDE_EFFORTS.map((e) => (
+                  <option key={e} value={e}>
+                    effort {e}
+                  </option>
+                ))}
+              </select>
+            )}
+          </label>
+        ))}
         {running ? (
           <button onClick={stop} className="rounded bg-rose-500 px-4 py-1.5 font-semibold">
             ストップ
           </button>
         ) : (
           <button
-            onClick={() => start({ difficulty, mode, enemyIntervalMs, model, effort, seed })}
-            className="rounded bg-amber-400 px-4 py-1.5 font-semibold text-slate-950 hover:bg-amber-300"
+            disabled={slots.length === 0}
+            onClick={() => start({ difficulty, mode, enemyIntervalMs, opusEffort, seed, slots })}
+            className="rounded bg-amber-400 px-4 py-1.5 font-semibold text-slate-950 hover:bg-amber-300 disabled:opacity-40"
           >
             たたかう！
           </button>
@@ -135,23 +152,48 @@ export function Battle() {
         {mode === "realtime"
           ? `敵は ${enemyIntervalMs}ms ごとに勝手に行動する。判断が速いほど多く動ける。`
           : "勇者と敵が交互に行動する。判断の中身と、考えるのにかかった時間を比べる。"}
-        同じシードなら Jev と Claude は同じ乱数で戦う。
+        同じシードなら全員が同じ乱数で戦う。動かさなかった列は前回の結果を残す。
       </p>
 
-      <div className="grid gap-5 lg:grid-cols-2">
-        <ArenaPanel engine="jev" title="Jev" arena={arenas.jev} accent="amber" />
-        <ArenaPanel
-          engine="claude"
-          title={`Claude(${model}${model === "claude-haiku-4-5" ? "" : ` / ${effort}`})`}
-          arena={arenas.claude}
-          accent="sky"
-        />
+      <div className="grid gap-4 lg:grid-cols-3">
+        {SLOT_IDS.map((id) => (
+          <ArenaPanel
+            key={id}
+            slot={id}
+            arena={arenas[id]}
+            current={current}
+            isRunning={runningSlots.includes(id)}
+          />
+        ))}
       </div>
     </div>
   );
 }
 
-function ArenaPanel(props: { engine: Engine; title: string; arena: Arena; accent: "amber" | "sky" }) {
+function sameConditions(a: ArenaConditions, b: ArenaConditions) {
+  return (
+    a.difficulty === b.difficulty &&
+    a.mode === b.mode &&
+    a.seed === b.seed &&
+    (a.mode === "turn" || a.enemyIntervalMs === b.enemyIntervalMs)
+  );
+}
+
+function ConditionsLine({ arena, current }: { arena: Arena; current: ArenaConditions }) {
+  const c = arena.conditions;
+  if (!c) return <p className="h-4 text-xs text-slate-600">未実行</p>;
+  const differs = !sameConditions(c, current);
+  return (
+    <p className={`h-4 text-xs ${differs ? "text-amber-400" : "text-slate-500"}`}>
+      {differs && "⚠ 今の設定と違う: "}
+      {DIFFICULTY_LABEL[c.difficulty]}・{MODE_LABEL[c.mode]}
+      {c.mode === "realtime" && `(${c.enemyIntervalMs}ms)`}・シード {c.seed}
+      {c.effort && `・effort ${c.effort}`}
+    </p>
+  );
+}
+
+function ArenaPanel(props: { slot: SlotId; arena: Arena; current: ArenaConditions; isRunning: boolean }) {
   const { arena } = props;
   const { hero, enemy, result } = arena.state;
   const last = arena.decisions.at(-1);
@@ -159,18 +201,23 @@ function ArenaPanel(props: { engine: Engine; title: string; arena: Arena; accent
     arena.decisions.length > 0
       ? Math.round(arena.decisions.reduce((s, d) => s + d.latencyMs, 0) / arena.decisions.length)
       : null;
-  const accentText = props.accent === "amber" ? "text-amber-300" : "text-sky-300";
+  const accentText = ACCENTS[props.slot];
 
   return (
-    <section className="font-dq relative space-y-3 rounded-xl bg-slate-900/60 p-4 ring-1 ring-slate-800">
-      <header className="flex items-baseline justify-between">
-        <h2 className={`text-xl font-bold ${accentText}`}>{props.title}</h2>
-        <Elapsed arena={arena} />
+    <section
+      className={`font-dq relative space-y-3 rounded-xl bg-slate-900/60 p-4 ring-1 ${props.isRunning ? "ring-slate-600" : "ring-slate-800"}`}
+    >
+      <header>
+        <div className="flex items-baseline justify-between">
+          <h2 className={`text-lg font-bold ${accentText}`}>{SLOTS[props.slot].label}</h2>
+          <Elapsed arena={arena} />
+        </div>
+        <ConditionsLine arena={arena} current={props.current} />
       </header>
 
       {/* 敵 */}
       <div className="text-center">
-        <div className={`text-7xl ${enemy.hp === 0 ? "opacity-20 grayscale" : ""}`}>🐉</div>
+        <div className={`text-6xl ${enemy.hp === 0 ? "opacity-20 grayscale" : ""}`}>🐉</div>
         <Bar value={enemy.hp} max={enemy.maxHp} color="bg-rose-500" />
         {arena.state.difficulty === "hard" ? (
           <p className="mt-2 min-h-5 text-xs text-slate-400">
@@ -191,7 +238,7 @@ function ArenaPanel(props: { engine: Engine; title: string; arena: Arena; accent
 
       {/* 勇者のステータス */}
       <DqWindow>
-        <div className="flex items-center justify-between gap-4 text-sm">
+        <div className="flex items-center justify-between gap-2 text-sm">
           <span>ゆうしゃ{hero.defending && <span className="ml-1 text-sky-300">🛡</span>}</span>
           <span className="tabular-nums">
             HP <span className={hero.hp <= 30 ? "text-rose-400" : ""}>{hero.hp}</span>
@@ -234,7 +281,7 @@ function ArenaPanel(props: { engine: Engine; title: string; arena: Arena; accent
 
       {result && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-xl bg-slate-950/80">
-          <p className={`text-4xl font-bold ${result === "win" ? "text-amber-300" : "text-rose-400"}`}>
+          <p className={`px-2 text-center text-2xl font-bold ${result === "win" ? "text-amber-300" : "text-rose-400"}`}>
             {result === "win" ? "ドラゴンをやっつけた！" : "ゆうしゃは しんでしまった…"}
           </p>
           <p className="text-sm text-slate-300">
