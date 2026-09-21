@@ -17,6 +17,8 @@ Jev(TypeSafe AI の System One Model)と Claude の判断速度を比べる、�
 - 機能や仕様を変えたら、対応する `docs/` と README も更新する。進捗は `docs/presentation.md` のチェックリストに反映する
 - 区切りのよいところでコミットする
 - API キーは `.dev.vars`(ローカル)と `wrangler secret`(本番)にだけ置く。コードやドキュメントに書かない
-- Claude の既定モデルは今は `claude-haiku-4-5`(動作確認用の最安)。変えるときは `worker/index.ts` と `src/pages/*` の初期値を合わせる。バトルは Jev・Haiku・Opus の3列固定(`src/battle/useBattle.ts` の `SLOTS`)で、Opus の effort は難易度ごとのおすすめ設定(`src/pages/Battle.tsx` の `PRESETS`)
+- Claude の既定モデルは今は `claude-haiku-4-5`(動作確認用の最安)。変えるときは `worker/index.ts` と `src/pages/*` の初期値を合わせる。バトルとフォームは Jev・Haiku・Opus の3列固定(`src/slots.ts` の `SLOTS`)で、Opus の effort は難易度ごとのおすすめ設定(`src/pages/Battle.tsx` の `PRESETS`)
 - 変更後は `npm run typecheck` を通す
+- このリポジトリは**個人アカウント(hideri777)**のもの。この PC の gh は仕事用アカウント(arkth-h-hori-dtc)が既定なので、gh を使うときは毎回 `GH_TOKEN=$(gh auth token --user hideri777) gh ...` の形で個人アカウントを指定する(`gh auth switch` で全体の既定を変えない)
+- git の接続先は `git@github.com:hideri777/...` のままでよい(`~/.gitconfig` の `insteadOf` で個人用の SSH 鍵に振り分けられる)
 - 参加者はキーなしのダミーモードで動かす。挙動や応答時間の前提(検証結果)が変わったら `src/sandbox/` と docs/sandbox.md も合わせる
