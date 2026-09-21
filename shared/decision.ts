@@ -73,3 +73,10 @@ export interface DecideResponse {
 export interface ErrorResponse {
   error: string;
 }
+
+/** GET /api/status。キーが無ければフロントはダミーモードに固定する */
+export interface StatusResponse {
+  jev: boolean;
+  claude: boolean;
+  passcodeRequired: boolean;
+}

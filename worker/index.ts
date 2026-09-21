@@ -7,18 +7,29 @@ import {
   type DecideRequest,
   type DecideResponse,
   type ErrorResponse,
+  type StatusResponse,
 } from "../shared/decision";
 import { decideWithClaude } from "./claude";
 import { decideWithJev } from "./jev";
 
 type Bindings = {
-  TYPESAFE_API_KEY: string;
-  ANTHROPIC_API_KEY: string;
+  /** 未設定でも起動できる(フロントはダミーモードになる) */
+  TYPESAFE_API_KEY?: string;
+  ANTHROPIC_API_KEY?: string;
   /** 設定されていれば /api/* に合言葉を要求する */
   DEMO_PASSCODE?: string;
 };
 
 const app = new Hono<{ Bindings: Bindings }>().basePath("/api");
+
+// キーの有無だけを返す。クローンしただけの環境でもフロントが判断できるよう、合言葉より前に置く
+app.get("/status", (c) =>
+  c.json<StatusResponse>({
+    jev: Boolean(c.env.TYPESAFE_API_KEY),
+    claude: Boolean(c.env.ANTHROPIC_API_KEY),
+    passcodeRequired: Boolean(c.env.DEMO_PASSCODE),
+  }),
+);
 
 app.use("*", async (c, next) => {
   const passcode = c.env.DEMO_PASSCODE;
@@ -43,13 +54,21 @@ app.post("/decide", async (c) => {
     ? (body.effort as ClaudeEffort)
     : "low";
 
+  const apiKey = body.engine === "jev" ? c.env.TYPESAFE_API_KEY : c.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    return c.json<ErrorResponse>(
+      { error: `${body.engine === "jev" ? "TYPESAFE" : "ANTHROPIC"}_API_KEY が未設定です。ダミーモードで試してください` },
+      503,
+    );
+  }
+
   const started = Date.now();
   try {
     const result =
       body.engine === "jev"
-        ? await decideWithJev(c.env.TYPESAFE_API_KEY, body.state, body.questions)
+        ? await decideWithJev(apiKey, body.state, body.questions)
         : await decideWithClaude(
-            c.env.ANTHROPIC_API_KEY,
+            apiKey,
             model,
             effort,
             body.state,

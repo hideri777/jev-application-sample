@@ -7,6 +7,8 @@ import {
   type Questions,
 } from "../../shared/decision";
 import { decide, type DecideResult } from "../api";
+import { useSandbox } from "../sandbox/SandboxContext";
+import { dummyGenericDecide } from "../sandbox/generic";
 
 const SAMPLE_STATE = {
   hero: { name: "ゆうしゃ", hp: 18, maxHp: 80, mp: 12, spells: ["ホイミ(MP3)", "メラ(MP2)"] },
@@ -48,6 +50,7 @@ export function Playground() {
     claude: { status: "idle" },
   });
   const [parseError, setParseError] = useState<string>();
+  const { enabled: sandbox } = useSandbox();
 
   const run = () => {
     let state: unknown;
@@ -64,7 +67,7 @@ export function Playground() {
     // 2つのエンジンを同時に走らせ、先に返った方から表示する
     for (const engine of ["jev", "claude"] as const) {
       setSlots((s) => ({ ...s, [engine]: { status: "loading" } }));
-      decide({ engine, model, state, questions })
+      (sandbox ? dummyGenericDecide : decide)({ engine, model, state, questions })
         .then((result) => setSlots((s) => ({ ...s, [engine]: { status: "done", result } })))
         .catch((e: Error) =>
           setSlots((s) => ({ ...s, [engine]: { status: "error", error: e.message } })),
@@ -99,6 +102,11 @@ export function Playground() {
           </select>
         </label>
         {parseError && <span className="text-sm text-rose-400">{parseError}</span>}
+        {sandbox && (
+          <span className="text-xs text-emerald-300">
+            ダミーモードでは質問の中身を理解せず、文字の重なりで答えを選ぶだけ(応答時間だけ本物に近い)
+          </span>
+        )}
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">

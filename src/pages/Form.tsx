@@ -1,21 +1,33 @@
 import { useEffect, useRef, useState } from "react";
-import { CLAUDE_MODELS, type Answer, type ClaudeModel, type Engine } from "../../shared/decision";
+import { CLAUDE_EFFORTS, type Answer, type ClaudeEffort } from "../../shared/decision";
 import { DEPARTMENTS, SAMPLES, URGENCY_LEVELS, type Department } from "../form/questions";
 import { useLiveDecision, type LiveDecision } from "../form/useLiveDecision";
+import { useSandbox } from "../sandbox/SandboxContext";
+import { SLOT_IDS, SLOTS, type SlotId } from "../slots";
+
+const ACCENTS: Record<SlotId, string> = {
+  jev: "text-amber-300",
+  haiku: "text-sky-300",
+  opus: "text-violet-300",
+};
 
 const TYPING_INTERVAL_MS = 60;
 
 export function Form() {
   const [text, setText] = useState("");
-  const [model, setModel] = useState<ClaudeModel>("claude-haiku-4-5");
-  const [driver, setDriver] = useState<Engine>("jev");
+  // 入力中の判定なので、Opus も既定は速さ優先の low
+  const [opusEffort, setOpusEffort] = useState<ClaudeEffort>("low");
+  const [driver, setDriver] = useState<SlotId>("jev");
+  const { enabled: sandbox } = useSandbox();
   const [submitted, setSubmitted] = useState(false);
   const typingTimer = useRef<number | null>(null);
 
-  // Jev はモデルを使わないので固定値を渡し、Claude のモデル切り替えで判定し直さないようにする
-  const jev = useLiveDecision("jev", text, "claude-haiku-4-5");
-  const claude = useLiveDecision("claude", text, model);
-  const drive = driver === "jev" ? jev : claude;
+  const decisions: Record<SlotId, ReturnType<typeof useLiveDecision>> = {
+    jev: useLiveDecision("jev", text, { effort: "low", sandbox }),
+    haiku: useLiveDecision("haiku", text, { effort: "low", sandbox }),
+    opus: useLiveDecision("opus", text, { effort: opusEffort, sandbox }),
+  };
+  const drive = decisions[driver];
 
   const stopTyping = () => {
     if (typingTimer.current !== null) clearInterval(typingTimer.current);
@@ -27,8 +39,7 @@ export function Form() {
     stopTyping();
     setSubmitted(false);
     setText("");
-    jev.reset();
-    claude.reset();
+    SLOT_IDS.forEach((id) => decisions[id].reset());
     let i = 0;
     typingTimer.current = window.setInterval(() => {
       i += 1;
@@ -65,22 +76,25 @@ export function Form() {
           フォームを動かす判定{" "}
           <select
             value={driver}
-            onChange={(e) => setDriver(e.target.value as Engine)}
+            onChange={(e) => setDriver(e.target.value as SlotId)}
             className="ml-1 rounded bg-slate-900 px-2 py-1 text-slate-100 ring-1 ring-slate-700"
           >
-            <option value="jev">Jev</option>
-            <option value="claude">Claude</option>
+            {SLOT_IDS.map((id) => (
+              <option key={id} value={id}>
+                {SLOTS[id].label}
+              </option>
+            ))}
           </select>
         </label>
         <label className="text-slate-400">
-          Claude{" "}
+          Opus の effort{" "}
           <select
-            value={model}
-            onChange={(e) => setModel(e.target.value as ClaudeModel)}
+            value={opusEffort}
+            onChange={(e) => setOpusEffort(e.target.value as ClaudeEffort)}
             className="ml-1 rounded bg-slate-900 px-2 py-1 text-slate-100 ring-1 ring-slate-700"
           >
-            {CLAUDE_MODELS.map((m) => (
-              <option key={m}>{m}</option>
+            {CLAUDE_EFFORTS.map((e) => (
+              <option key={e}>{e}</option>
             ))}
           </select>
         </label>
@@ -117,7 +131,7 @@ export function Form() {
               <span className={`rounded px-2 py-1 ${view.urgent ? "bg-rose-500/20 text-rose-300" : "bg-slate-800"}`}>
                 緊急度: <b>{URGENCY_LEVELS[view.urgencyLevel]}</b>
               </span>
-              <span className="text-xs text-slate-500">({driver === "jev" ? "Jev" : "Claude"} の判定)</span>
+              <span className="text-xs text-slate-500">({SLOTS[driver].label} の判定)</span>
             </div>
           )}
 
@@ -162,14 +176,16 @@ export function Form() {
 
         {/* 判定の比較 */}
         <div className="space-y-4">
-          <DecisionPanel title="Jev" accent="text-amber-300" decision={jev} text={text} active={driver === "jev"} />
-          <DecisionPanel
-            title={`Claude(${model})`}
-            accent="text-sky-300"
-            decision={claude}
-            text={text}
-            active={driver === "claude"}
-          />
+          {SLOT_IDS.map((id) => (
+            <DecisionPanel
+              key={id}
+              title={id === "opus" ? `${SLOTS[id].label} / ${opusEffort}` : SLOTS[id].label}
+              accent={ACCENTS[id]}
+              decision={decisions[id]}
+              text={text}
+              active={driver === id}
+            />
+          ))}
         </div>
       </div>
     </div>

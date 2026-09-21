@@ -29,10 +29,12 @@ shared/
   decision.ts    フロントと Worker で共有する型(質問・回答・API)
 src/             React の SPA
   api.ts         /api/decide のクライアント。合言葉は localStorage に保存
-  Layout.tsx     ヘッダー・ナビ・合言葉入力
+  Layout.tsx     ヘッダー・ナビ・ダミーモードの切り替え・合言葉入力
+  slots.ts       画面に並べる判断エンジン(Jev・Claude Haiku 4.5・Claude Opus 5)
   pages/         Home / Playground / Battle / Form
   battle/        バトルのルール(engine.ts)と進行(useBattle.ts)
   form/          フォームの質問・サンプル(questions.ts)と入力中の判定(useLiveDecision.ts)
+  sandbox/       ダミーモード(API を呼ばずに動く)。docs/sandbox.md 参照
 docs/            設計書・仕様書
 wrangler.jsonc   Worker の設定。/api/* だけ Worker が先に受け、それ以外は SPA を返す
 ```
@@ -84,13 +86,20 @@ Jev と Claude を**同じ質問形式**で呼ぶ唯一の API。質問の書式
 - `probabilities` / `confidence` は Jev だけが返す。Claude は値のみで、`noul` は `true`/`false` を 1/0 にして返す
 - エラーは `{ "error": "..." }`。上流 API の失敗は 502
 
+### `GET /api/status`
+
+`{ "jev": true, "claude": true, "passcodeRequired": true }` のように、キーと合言葉が設定されているかだけを返す(値は返さない)。
+合言葉なしで呼べる。フロントはキーが片方でも無ければダミーモードに固定する。
+
+キーが無いまま `/api/decide` を呼ぶと 503 を返す。
+
 ### `GET /api/health`
 
 `{ "ok": true }` を返す。
 
 ### 合言葉
 
-`DEMO_PASSCODE` が設定されていると、`/api/*` はすべて `x-demo-passcode` ヘッダーが一致しないと 401 を返す。公開 URL で API キーが使われ放題になるのを防ぐための最低限の対策。
+`DEMO_PASSCODE` が設定されていると、`/api/status` 以外の `/api/*` はすべて `x-demo-passcode` ヘッダーが一致しないと 401 を返す。公開 URL で API キーが使われ放題になるのを防ぐための最低限の対策。
 
 ## Claude 側の条件の揃え方
 

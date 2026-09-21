@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { ClaudeEffort, ClaudeModel, Engine } from "../../shared/decision";
+import type { ClaudeEffort } from "../../shared/decision";
 import { decide } from "../api";
+import { dummyBattleDecision } from "../sandbox/battle";
+import { SLOT_IDS, SLOTS, type SlotId } from "../slots";
 import {
   applyEnemyMove,
   applyHeroAction,
@@ -15,16 +17,7 @@ import {
 
 export type BattleMode = "turn" | "realtime";
 
-/** 画面に並べる対戦者。Claude はモデルを固定し、Opus だけ effort を選べる */
-export type SlotId = "jev" | "haiku" | "opus";
-
-export const SLOTS: Record<SlotId, { label: string; engine: Engine; model?: ClaudeModel }> = {
-  jev: { label: "Jev", engine: "jev" },
-  haiku: { label: "Claude Haiku 4.5", engine: "claude", model: "claude-haiku-4-5" },
-  opus: { label: "Claude Opus 5", engine: "claude", model: "claude-opus-5" },
-};
-
-export const SLOT_IDS = Object.keys(SLOTS) as SlotId[];
+export { SLOT_IDS, SLOTS, type SlotId } from "../slots";
 
 export interface BattleConfig {
   difficulty: Difficulty;
@@ -35,10 +28,15 @@ export interface BattleConfig {
   seed: number;
   /** 今回動かす対戦者。含まれない対戦者は前回の結果を残す */
   slots: SlotId[];
+  /** ダミーモード(API を呼ばず、事前に決めた動きで判断する) */
+  sandbox: boolean;
 }
 
 /** その対戦がどの条件で行われたか(前回の結果と今の設定を見比べるため) */
-export type ArenaConditions = Pick<BattleConfig, "difficulty" | "mode" | "enemyIntervalMs" | "seed"> & {
+export type ArenaConditions = Pick<
+  BattleConfig,
+  "difficulty" | "mode" | "enemyIntervalMs" | "seed" | "sandbox"
+> & {
   effort?: ClaudeEffort;
 };
 
@@ -79,6 +77,26 @@ function freshArena(seed: number, difficulty: Difficulty = "easy"): Arena {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+async function apiBattleDecision(slot: SlotId, arena: Arena, opusEffort: ClaudeEffort): Promise<Decision> {
+  const { state, log } = arena;
+  const { engine, model } = SLOTS[slot];
+  const res = await decide({
+    engine,
+    model,
+    effort: slot === "opus" ? opusEffort : "low",
+    state: toDecisionState(state, log.slice(-3)),
+    questions: toActionQuestion(state),
+  });
+  const answer = res.answers.action;
+  if (answer?.type !== "choice") throw new Error("action の回答がありません");
+  return {
+    action: answer.choice as HeroAction,
+    latencyMs: res.latencyMs,
+    confidence: answer.confidence,
+    probabilities: answer.probabilities,
+  };
+}
+
 export function useBattle() {
   // 非同期ループからは常に最新の状態を読みたいので ref に持ち、描画は tick で起こす
   const arenasRef = useRef<Record<SlotId, Arena>>({
@@ -114,7 +132,6 @@ export function useBattle() {
   const heroLoop = useCallback(
     async (slot: SlotId, runId: number, config: BattleConfig) => {
       const alive = () => runIdRef.current === runId;
-      const { engine, model } = SLOTS[slot];
 
       while (alive() && !arenasRef.current[slot].state.result) {
         const snapshot = arenasRef.current[slot];
@@ -122,21 +139,9 @@ export function useBattle() {
 
         let decision: Decision;
         try {
-          const res = await decide({
-            engine,
-            model,
-            effort: slot === "opus" ? config.opusEffort : "low",
-            state: toDecisionState(snapshot.state, snapshot.log.slice(-3)),
-            questions: toActionQuestion(snapshot.state),
-          });
-          const answer = res.answers.action;
-          if (answer?.type !== "choice") throw new Error("action の回答がありません");
-          decision = {
-            action: answer.choice as HeroAction,
-            latencyMs: res.latencyMs,
-            confidence: answer.confidence,
-            probabilities: answer.probabilities,
-          };
+          decision = config.sandbox
+            ? await dummyBattleDecision(slot, snapshot.state, config.opusEffort)
+            : await apiBattleDecision(slot, snapshot, config.opusEffort);
         } catch (e) {
           if (!alive()) return;
           update(slot, (a) => ({ ...a, thinkingSince: null, error: (e as Error).message }));
@@ -192,6 +197,7 @@ export function useBattle() {
             mode: config.mode,
             enemyIntervalMs: config.enemyIntervalMs,
             seed: config.seed,
+            sandbox: config.sandbox,
             effort: slot === "opus" ? config.opusEffort : undefined,
           },
         };

@@ -6,19 +6,22 @@ import { Battle } from "./pages/Battle";
 import { Form } from "./pages/Form";
 import { Home } from "./pages/Home";
 import { Playground } from "./pages/Playground";
+import { SandboxProvider } from "./sandbox/SandboxContext";
 import "./styles.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <BrowserRouter>
-      <Routes>
-        <Route element={<Layout />}>
-          <Route index element={<Home />} />
-          <Route path="playground" element={<Playground />} />
-          <Route path="battle" element={<Battle />} />
-          <Route path="form" element={<Form />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    <SandboxProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route element={<Layout />}>
+            <Route index element={<Home />} />
+            <Route path="playground" element={<Playground />} />
+            <Route path="battle" element={<Battle />} />
+            <Route path="form" element={<Form />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </SandboxProvider>
   </StrictMode>,
 );

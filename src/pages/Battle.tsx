@@ -10,6 +10,7 @@ import {
   type BattleMode,
   type SlotId,
 } from "../battle/useBattle";
+import { useSandbox } from "../sandbox/SandboxContext";
 
 /** 難易度ごとのおすすめ設定。難易度を切り替えるとこれが入る(その後は個別に変えられる) */
 const PRESETS: Record<Difficulty, { mode: BattleMode; opusEffort: ClaudeEffort }> = {
@@ -33,6 +34,7 @@ const MODE_LABEL: Record<BattleMode, string> = { realtime: "リアルタイム",
 
 export function Battle() {
   const { arenas, running, runningSlots, start, stop } = useBattle();
+  const { enabled: sandbox } = useSandbox();
   const [difficulty, setDifficulty] = useState<Difficulty>("easy");
   const [mode, setMode] = useState<BattleMode>(PRESETS.easy.mode);
   const [enemyIntervalMs, setEnemyIntervalMs] = useState(1000);
@@ -47,7 +49,7 @@ export function Battle() {
   };
 
   const slots = SLOT_IDS.filter((id) => selected[id]);
-  const current: ArenaConditions = { difficulty, mode, enemyIntervalMs, seed };
+  const current: ArenaConditions = { difficulty, mode, enemyIntervalMs, seed, sandbox };
 
   return (
     <div className="space-y-5">
@@ -139,7 +141,7 @@ export function Battle() {
         ) : (
           <button
             disabled={slots.length === 0}
-            onClick={() => start({ difficulty, mode, enemyIntervalMs, opusEffort, seed, slots })}
+            onClick={() => start({ difficulty, mode, enemyIntervalMs, opusEffort, seed, slots, sandbox })}
             className="rounded bg-amber-400 px-4 py-1.5 font-semibold text-slate-950 hover:bg-amber-300 disabled:opacity-40"
           >
             たたかう！
@@ -175,6 +177,7 @@ function sameConditions(a: ArenaConditions, b: ArenaConditions) {
     a.difficulty === b.difficulty &&
     a.mode === b.mode &&
     a.seed === b.seed &&
+    a.sandbox === b.sandbox &&
     (a.mode === "turn" || a.enemyIntervalMs === b.enemyIntervalMs)
   );
 }
@@ -189,6 +192,7 @@ function ConditionsLine({ arena, current }: { arena: Arena; current: ArenaCondit
       {DIFFICULTY_LABEL[c.difficulty]}・{MODE_LABEL[c.mode]}
       {c.mode === "realtime" && `(${c.enemyIntervalMs}ms)`}・シード {c.seed}
       {c.effort && `・effort ${c.effort}`}
+      {c.sandbox && "・ダミー"}
     </p>
   );
 }

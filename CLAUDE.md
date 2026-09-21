@@ -9,6 +9,7 @@ Jev(TypeSafe AI の System One Model)と Claude の判断速度を比べる、�
 - [docs/design.md](docs/design.md): 技術スタックの理由・構成・API 仕様
 - [docs/battle.md](docs/battle.md): ターンバトルの仕様とバランス調整の記録
 - [docs/form.md](docs/form.md): 問い合わせフォームの仕様と計測結果
+- [docs/sandbox.md](docs/sandbox.md): ダミーモード(API キーなしで動く)の仕様
 - [docs/jev.md](docs/jev.md): Jev の調査メモ
 
 ## 作業の決まり
@@ -18,3 +19,4 @@ Jev(TypeSafe AI の System One Model)と Claude の判断速度を比べる、�
 - API キーは `.dev.vars`(ローカル)と `wrangler secret`(本番)にだけ置く。コードやドキュメントに書かない
 - Claude の既定モデルは今は `claude-haiku-4-5`(動作確認用の最安)。変えるときは `worker/index.ts` と `src/pages/*` の初期値を合わせる。バトルは Jev・Haiku・Opus の3列固定(`src/battle/useBattle.ts` の `SLOTS`)で、Opus の effort は難易度ごとのおすすめ設定(`src/pages/Battle.tsx` の `PRESETS`)
 - 変更後は `npm run typecheck` を通す
+- 参加者はキーなしのダミーモードで動かす。挙動や応答時間の前提(検証結果)が変わったら `src/sandbox/` と docs/sandbox.md も合わせる
