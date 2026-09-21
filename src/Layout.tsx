@@ -65,7 +65,7 @@ export function Layout() {
           <div className="border-t border-emerald-900/60 bg-emerald-950/40">
             <p className="mx-auto max-w-7xl px-4 py-1.5 text-xs text-emerald-300">
               ダミーモード: API を呼ばず、検証で見えた挙動を再現した事前定義の動きと応答時間で動いています。
-              {sandbox.forced && " API キーが未設定のため、このモードに固定しています(README の「APIキーを使う」参照)。"}
+              {sandbox.forced && " API キーが未設定のため、このモードに固定しています(README の「API キーを使う」参照)。"}
             </p>
           </div>
         )}
