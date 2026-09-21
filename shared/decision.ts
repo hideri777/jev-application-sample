@@ -47,10 +47,16 @@ export const CLAUDE_MODELS = [
 ] as const;
 export type ClaudeModel = (typeof CLAUDE_MODELS)[number];
 
+/** Claude がどれだけ考えるか。low は速さ優先、medium / high は考える時間(thinking)を多めに使う */
+export const CLAUDE_EFFORTS = ["low", "medium", "high"] as const;
+export type ClaudeEffort = (typeof CLAUDE_EFFORTS)[number];
+
 export interface DecideRequest {
   engine: Engine;
   /** Claude のときだけ使う。省略時は claude-haiku-4-5 */
   model?: ClaudeModel;
+  /** Claude のときだけ使う。省略時は low。Haiku 4.5 は非対応なので無視する */
+  effort?: ClaudeEffort;
   state: unknown;
   questions: Questions;
 }

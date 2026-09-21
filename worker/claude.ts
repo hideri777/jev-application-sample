@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import type { Answer, ClaudeModel, Questions } from "../shared/decision";
+import type { Answer, ClaudeEffort, ClaudeModel, Questions } from "../shared/decision";
 
 const SYSTEM_PROMPT =
   "あなたは意思決定関数です。state を読み、questions の各質問に指定の形式で答えてください。説明文は不要です。";
@@ -44,26 +44,31 @@ function toAnswers(
 export async function decideWithClaude(
   apiKey: string,
   model: ClaudeModel,
+  effort: ClaudeEffort,
   state: unknown,
   questions: Questions,
 ) {
   const client = new Anthropic({ apiKey });
   const response = await client.messages.create({
     model,
-    max_tokens: 1024,
+    // effort を上げると考える時間(thinking)にトークンを使うので余裕を持たせる
+    max_tokens: 16000,
     system: SYSTEM_PROMPT,
     messages: [
       { role: "user", content: JSON.stringify({ state, questions }) },
     ],
     output_config: {
-      // 速度比較なので effort は最小に(Haiku 4.5 は effort 非対応なので付けない)
-      ...(model === "claude-haiku-4-5" ? {} : { effort: "low" as const }),
+      // Haiku 4.5 は effort 非対応なので付けない
+      ...(model === "claude-haiku-4-5" ? {} : { effort }),
       format: { type: "json_schema", schema: toJsonSchema(questions) },
     },
   });
 
   if (response.stop_reason === "refusal") {
     throw new Error("Claude が回答を拒否しました");
+  }
+  if (response.stop_reason === "max_tokens") {
+    throw new Error("Claude の応答が max_tokens で打ち切られました");
   }
   const text = response.content.find((b) => b.type === "text");
   if (!text || text.type !== "text") {

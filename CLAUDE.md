@@ -16,5 +16,5 @@ Jev(TypeSafe AI の System One Model)と Claude の判断速度を比べる、�
 - 機能や仕様を変えたら、対応する `docs/` と README も更新する。進捗は `docs/presentation.md` のチェックリストに反映する
 - 区切りのよいところでコミットする
 - API キーは `.dev.vars`(ローカル)と `wrangler secret`(本番)にだけ置く。コードやドキュメントに書かない
-- Claude の既定モデルは今は `claude-haiku-4-5`(動作確認用の最安)。変えるときは `worker/index.ts` と `src/pages/*` の初期値を合わせる
+- Claude の既定モデルは今は `claude-haiku-4-5`(動作確認用の最安)。変えるときは `worker/index.ts` と `src/pages/*` の初期値を合わせる。バトルの「むずかしい」だけは `claude-opus-5` / effort medium がおすすめ設定(`src/pages/Battle.tsx` の `PRESETS`)
 - 変更後は `npm run typecheck` を通す

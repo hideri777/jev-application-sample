@@ -1,6 +1,8 @@
 import { Hono } from "hono";
 import {
+  CLAUDE_EFFORTS,
   CLAUDE_MODELS,
+  type ClaudeEffort,
   type ClaudeModel,
   type DecideRequest,
   type DecideResponse,
@@ -37,6 +39,9 @@ app.post("/decide", async (c) => {
   const model: ClaudeModel = CLAUDE_MODELS.includes(body.model as ClaudeModel)
     ? (body.model as ClaudeModel)
     : "claude-haiku-4-5";
+  const effort: ClaudeEffort = CLAUDE_EFFORTS.includes(body.effort as ClaudeEffort)
+    ? (body.effort as ClaudeEffort)
+    : "low";
 
   const started = Date.now();
   try {
@@ -46,6 +51,7 @@ app.post("/decide", async (c) => {
         : await decideWithClaude(
             c.env.ANTHROPIC_API_KEY,
             model,
+            effort,
             body.state,
             body.questions,
           );

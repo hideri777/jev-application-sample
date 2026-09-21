@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { ClaudeModel, Engine } from "../../shared/decision";
+import type { ClaudeEffort, ClaudeModel, Engine } from "../../shared/decision";
 import { decide } from "../api";
 import {
   applyEnemyMove,
@@ -8,6 +8,7 @@ import {
   toActionQuestion,
   toDecisionState,
   type BattleState,
+  type Difficulty,
   type HeroAction,
   type LogEntry,
 } from "./engine";
@@ -15,10 +16,12 @@ import {
 export type BattleMode = "turn" | "realtime";
 
 export interface BattleConfig {
+  difficulty: Difficulty;
   mode: BattleMode;
   /** リアルタイムモードで敵が行動する間隔 */
   enemyIntervalMs: number;
   model: ClaudeModel;
+  effort: ClaudeEffort;
   seed: number;
 }
 
@@ -44,9 +47,9 @@ const ENGINES: Engine[] = ["jev", "claude"];
 const TURN_PAUSE_MS = 400;
 const MAX_LOG = 40;
 
-function freshArena(seed: number): Arena {
+function freshArena(seed: number, difficulty: Difficulty = "easy"): Arena {
   return {
-    state: createBattle(seed),
+    state: createBattle(seed, difficulty),
     log: [],
     decisions: [],
     thinkingSince: null,
@@ -101,6 +104,7 @@ export function useBattle() {
           const res = await decide({
             engine,
             model: config.model,
+            effort: config.effort,
             state: toDecisionState(snapshot.state, snapshot.log.slice(-3)),
             questions: toActionQuestion(snapshot.state),
           });
@@ -158,7 +162,7 @@ export function useBattle() {
       const runId = runIdRef.current;
       const now = performance.now();
       for (const engine of ENGINES) {
-        arenasRef.current[engine] = { ...freshArena(config.seed), startedAt: now };
+        arenasRef.current[engine] = { ...freshArena(config.seed, config.difficulty), startedAt: now };
       }
       setTick((t) => t + 1);
       setRunning(true);

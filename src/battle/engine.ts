@@ -2,6 +2,8 @@
 
 export type HeroAction = "attack" | "spell" | "heal" | "herb" | "defend";
 export type EnemyMove = "claw" | "breath" | "focus" | "smash";
+/** easy: 敵が次の行動を予告し、危険度も計算して渡す / hard: 予告なし。敵の周期を履歴から読む必要がある */
+export type Difficulty = "easy" | "hard";
 
 export interface BattleState {
   hero: {
@@ -12,7 +14,15 @@ export interface BattleState {
     herbs: number;
     defending: boolean;
   };
-  enemy: { name: string; hp: number; maxHp: number; next: EnemyMove };
+  enemy: {
+    name: string;
+    hp: number;
+    maxHp: number;
+    next: EnemyMove;
+    /** これまでの行動(古い順)。hard ではこれが周期を読む唯一の手がかり */
+    history: EnemyMove[];
+  };
+  difficulty: Difficulty;
   result: "win" | "lose" | null;
   seed: number;
 }
@@ -33,12 +43,17 @@ export const ACTIONS: Record<HeroAction, { label: string; description: string; m
   },
 };
 
-export const ENEMY_MOVES: Record<EnemyMove, { telegraph: string; min: number; max: number }> = {
-  claw: { telegraph: "爪をとぎすませている(次は通常攻撃、8〜12ダメージ)", min: 8, max: 12 },
-  breath: { telegraph: "大きく息を吸い込んだ！(次は激しい炎、22〜28ダメージ)", min: 22, max: 28 },
-  focus: { telegraph: "じっとこちらを見ている(次は力をためる、ダメージなし)", min: 0, max: 0 },
-  smash: { telegraph: "ためた力を解き放とうとしている！(次は痛恨の一撃、38〜46ダメージ)", min: 38, max: 46 },
+export const ENEMY_MOVES: Record<
+  EnemyMove,
+  { name: string; telegraph: string; min: number; max: number }
+> = {
+  claw: { name: "爪", telegraph: "爪をとぎすませている(次は通常攻撃、8〜12ダメージ)", min: 8, max: 12 },
+  breath: { name: "激しい炎", telegraph: "大きく息を吸い込んだ！(次は激しい炎、22〜28ダメージ)", min: 22, max: 28 },
+  focus: { name: "力をためる", telegraph: "じっとこちらを見ている(次は力をためる、ダメージなし)", min: 0, max: 0 },
+  smash: { name: "痛恨の一撃", telegraph: "ためた力を解き放とうとしている！(次は痛恨の一撃、38〜46ダメージ)", min: 38, max: 46 },
 };
+
+export const HARD_ENEMY_HP = 210;
 
 // 再現できる乱数(mulberry32)。同じシードなら Jev と Claude は同じ出目の列を引く
 function random(state: BattleState): number {
@@ -52,7 +67,13 @@ function roll(state: BattleState, min: number, max: number) {
   return min + Math.floor(random(state) * (max - min + 1));
 }
 
+/** hard の敵はこの周期を繰り返す(判断モデルには周期の中身は教えない) */
+export const HARD_PATTERN: EnemyMove[] = ["claw", "claw", "breath", "claw", "smash"];
+
 function pickNextEnemyMove(state: BattleState, prev: EnemyMove): EnemyMove {
+  if (state.difficulty === "hard") {
+    return HARD_PATTERN[state.enemy.history.length % HARD_PATTERN.length];
+  }
   if (prev === "focus") return "smash";
   const r = random(state);
   if (r < 0.5) return "claw";
@@ -60,10 +81,18 @@ function pickNextEnemyMove(state: BattleState, prev: EnemyMove): EnemyMove {
   return "focus";
 }
 
-export function createBattle(seed: number): BattleState {
+export function createBattle(seed: number, difficulty: Difficulty = "easy"): BattleState {
+  const enemyHp = difficulty === "hard" ? HARD_ENEMY_HP : 180;
   return {
     hero: { hp: 100, maxHp: 100, mp: 30, maxMp: 30, herbs: 3, defending: false },
-    enemy: { name: "ドラゴン", hp: 180, maxHp: 180, next: "claw" },
+    enemy: {
+      name: "ドラゴン",
+      hp: enemyHp,
+      maxHp: enemyHp,
+      next: difficulty === "hard" ? HARD_PATTERN[0] : "claw",
+      history: [],
+    },
+    difficulty,
     result: null,
     seed,
   };
@@ -80,7 +109,11 @@ export function availableActions(state: BattleState): HeroAction[] {
 
 /** 状態を複製して返す(React の state をそのまま書き換えないため) */
 function clone(state: BattleState): BattleState {
-  return { ...state, hero: { ...state.hero }, enemy: { ...state.enemy } };
+  return {
+    ...state,
+    hero: { ...state.hero },
+    enemy: { ...state.enemy, history: [...state.enemy.history] },
+  };
 }
 
 export function applyHeroAction(prev: BattleState, action: HeroAction): [BattleState, LogEntry] {
@@ -149,6 +182,7 @@ export function applyEnemyMove(prev: BattleState): [BattleState, LogEntry] {
   }
 
   h.defending = false;
+  e.history.push(move);
   e.next = pickNextEnemyMove(s, move);
   if (h.hp === 0) s.result = "lose";
   return [s, { side: "enemy", text }];
@@ -156,6 +190,34 @@ export function applyEnemyMove(prev: BattleState): [BattleState, LogEntry] {
 
 /** 判断モデルに渡す状態。割合などの計算はコード側で済ませておく(Jev は計算が苦手) */
 export function toDecisionState(state: BattleState, recentLog: LogEntry[]) {
+  return state.difficulty === "hard"
+    ? toHardDecisionState(state, recentLog)
+    : toEasyDecisionState(state, recentLog);
+}
+
+/** hard: 予告も計算済みのヒントも渡さない。生の数値と敵の行動履歴だけ */
+function toHardDecisionState(state: BattleState, recentLog: LogEntry[]) {
+  const { hero, enemy } = state;
+  return {
+    勇者: {
+      HP: `${hero.hp}/${hero.maxHp}`,
+      MP: `${hero.mp}/${hero.maxMp}`,
+      やくそうの残り: hero.herbs,
+      ぼうぎょ中: hero.defending,
+    },
+    敵: {
+      名前: enemy.name,
+      HP: `${enemy.hp}/${enemy.maxHp}`,
+      使う技: (["claw", "breath", "smash"] as const).map(
+        (m) => `${ENEMY_MOVES[m].name}(${ENEMY_MOVES[m].min}〜${ENEMY_MOVES[m].max}ダメージ)`,
+      ),
+      これまでの行動_古い順: enemy.history.map((m) => ENEMY_MOVES[m].name),
+    },
+    直近の出来事: recentLog.map((l) => l.text),
+  };
+}
+
+function toEasyDecisionState(state: BattleState, recentLog: LogEntry[]) {
   const { hero, enemy } = state;
   const maxDamage = ENEMY_MOVES[enemy.next].max;
   return {
@@ -184,11 +246,14 @@ export function toActionQuestion(state: BattleState) {
   for (const a of availableActions(state)) {
     criteria[a] = `${ACTIONS[a].label}: ${ACTIONS[a].description}`;
   }
+  const instructions =
+    state.difficulty === "hard"
+      ? "あなたは勇者。目的はドラゴンのHPを0にすること。勇者のHPが0になると負け。ドラゴンの行動は決まった周期で繰り返されるが、予告はない。これまでの行動履歴から次の行動を予測し、攻撃・回復・ぼうぎょを使い分けて、次にとる最善の行動を選べ。"
+      : "あなたは勇者。目的はドラゴンのHPを0にすること。勇者のHPが0になると負け。攻撃しなければ勝てないが、倒れたら終わり。敵の予兆と「次の敵の攻撃の見込み」を見て、攻撃・回復・ぼうぎょを使い分け、次にとる最善の行動を選べ。";
   return {
     action: {
       type: "choice" as const,
-      instructions:
-        "あなたは勇者。目的はドラゴンのHPを0にすること。勇者のHPが0になると負け。攻撃しなければ勝てないが、倒れたら終わり。敵の予兆と「次の敵の攻撃の見込み」を見て、攻撃・回復・ぼうぎょを使い分け、次にとる最善の行動を選べ。",
+      instructions,
       criteria,
     },
   };

@@ -62,6 +62,7 @@ Jev と Claude を**同じ質問形式**で呼ぶ唯一の API。質問の書式
 
 - `engine`: `"jev"` か `"claude"`
 - `model`: Claude のときだけ使う。`claude-opus-5` / `claude-sonnet-5` / `claude-haiku-4-5`。省略時は `claude-haiku-4-5`
+- `effort`: Claude のときだけ使う。`low` / `medium` / `high`。省略時は `low`。Haiku 4.5 は非対応なので無視する
 
 レスポンス(`DecideResponse`):
 
@@ -99,9 +100,11 @@ Jev と Claude を**同じ質問形式**で呼ぶ唯一の API。質問の書式
   - `choice` → 選択肢のキーの `enum`
   - `score` → `0..n-1` の整数の `enum`
   - `noul` → `boolean`
-- 速度比較なので `effort: "low"`(Haiku 4.5 は effort 非対応なので付けない)
-- `max_tokens: 1024`、システムプロンプトは「意思決定関数として、指定形式で答える」だけ
-- `stop_reason: "refusal"` はエラーとして扱う
+- effort はリクエストで指定(既定は速度優先の `low`。むずかしいのバトルでは `medium`)。Haiku 4.5 は effort 非対応なので付けない
+- thinking は指定しない(Opus 5 は既定で adaptive thinking。考える量は effort で調整する)
+- `max_tokens: 16000`(effort を上げると thinking にトークンを使うため)。システムプロンプトは「意思決定関数として、指定形式で答える」だけ
+- `stop_reason` が `refusal` / `max_tokens` のときはエラーとして扱う
+- 断られたときに別モデルで答え直すサーバー側フォールバックは**入れていない**(途中でモデルが入れ替わると比較にならないため)
 
 ## 既知の制約・今後
 
