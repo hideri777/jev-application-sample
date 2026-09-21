@@ -27,19 +27,25 @@ export type DecideResult = DecideResponse & {
   roundTripMs: number;
 };
 
-export async function decide(req: DecideRequest): Promise<DecideResult> {
-  const started = performance.now();
-  const res = await fetch("/api/decide", {
+/** API に JSON を POST する。合言葉を付け、エラーは例外にする */
+export async function postJson<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(path, {
     method: "POST",
     headers: {
       "content-type": "application/json",
       "x-demo-passcode": getPasscode(),
     },
-    body: JSON.stringify(req),
+    body: JSON.stringify(body),
   });
-  const data = (await res.json()) as DecideResponse | ErrorResponse;
-  if (!res.ok || "error" in data) {
-    throw new Error("error" in data ? data.error : `HTTP ${res.status}`);
+  const data = (await res.json()) as T | ErrorResponse;
+  if (!res.ok || (data !== null && typeof data === "object" && "error" in data)) {
+    throw new Error((data as ErrorResponse).error ?? `HTTP ${res.status}`);
   }
+  return data as T;
+}
+
+export async function decide(req: DecideRequest): Promise<DecideResult> {
+  const started = performance.now();
+  const data = await postJson<DecideResponse>("/api/decide", req);
   return { ...data, roundTripMs: Math.round(performance.now() - started) };
 }

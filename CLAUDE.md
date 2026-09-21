@@ -9,6 +9,7 @@ Jev(TypeSafe AI の System One Model)と Claude の判断速度を比べる、�
 - [docs/design.md](docs/design.md): 技術スタックの理由・構成・API 仕様
 - [docs/battle.md](docs/battle.md): ターンバトルの仕様とバランス調整の記録
 - [docs/form.md](docs/form.md): 問い合わせフォームの仕様と計測結果
+- [docs/interview.md](docs/interview.md): 模擬面接(appendix)の仕様と計測結果
 - [docs/sandbox.md](docs/sandbox.md): ダミーモード(API キーなしで動く)の仕様
 - [docs/jev.md](docs/jev.md): Jev の調査メモ
 - [public/slides/index.html](public/slides/index.html): 発表スライド(アプリの `/slides/`)。数字を変えたら docs と合わせる

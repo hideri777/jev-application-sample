@@ -8,6 +8,7 @@ const links = [
   { to: "/playground", label: "Playground" },
   { to: "/battle", label: "バトル" },
   { to: "/form", label: "フォーム" },
+  { to: "/interview", label: "模擬面接" },
 ];
 
 export function Layout() {

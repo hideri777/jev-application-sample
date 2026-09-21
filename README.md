@@ -31,7 +31,7 @@ http://localhost:5173 を開く。API キーが設定されていないので、
 1. **バトル** → 「かんたん」のまま「たたかう！」。速い Jev が勝ち、遅い Opus は負ける
 2. **バトル** → 「むずかしい」で「たたかう！」。予告もヒントもないと Jev は崩れ、先読みする Opus が勝つ
 3. **フォーム** → 「途中で話が変わる」を自動入力。Jev だけが入力に追いつき、判定が切り替わる様子が見える
-- **模擬面接**(appendix、余裕があれば): Claude が質問し、Jev が回答を即採点
+- **模擬面接**(appendix): Claude Haiku が質問し、回答中は Jev が即採点し続け、提出したら Claude Opus が講評する。AI の使い分け(カスケード)の例
 
 ## ドキュメント
 
@@ -41,6 +41,7 @@ http://localhost:5173 を開く。API キーが設定されていないので、
 | [docs/design.md](docs/design.md) | 技術スタックの選定理由、構成、API 仕様 |
 | [docs/battle.md](docs/battle.md) | ターンバトルの仕様とバランス調整の記録 |
 | [docs/form.md](docs/form.md) | 問い合わせフォームの仕様と計測結果 |
+| [docs/interview.md](docs/interview.md) | 模擬面接(appendix)の仕様と計測結果 |
 | [docs/sandbox.md](docs/sandbox.md) | ダミーモードの仕様(再現している挙動と応答時間) |
 | [docs/presentation.md](docs/presentation.md) | 発表の構成案・計測結果・進捗と残タスク |
 | [public/slides/index.html](public/slides/index.html) | 発表スライド(1ファイルの HTML。アプリの `/slides/` で開く) |

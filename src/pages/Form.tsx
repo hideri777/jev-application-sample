@@ -1,9 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { CLAUDE_EFFORTS, type Answer, type ClaudeEffort } from "../../shared/decision";
-import { DEPARTMENTS, SAMPLES, URGENCY_LEVELS, type Department } from "../form/questions";
-import { useLiveDecision, type LiveDecision } from "../form/useLiveDecision";
+import { DEPARTMENTS, FORM_QUESTIONS, SAMPLES, URGENCY_LEVELS, type Department } from "../form/questions";
+import { useLiveDecision, type LiveDecision, type LiveJudgeSpec } from "../live/useLiveDecision";
+import { dummyFormDecide } from "../sandbox/form";
 import { useSandbox } from "../sandbox/SandboxContext";
 import { SLOT_IDS, SLOTS, type SlotId } from "../slots";
+
+const FORM_SPEC: LiveJudgeSpec = {
+  questions: FORM_QUESTIONS,
+  toState: (text) => ({ 問い合わせ本文: text }),
+  dummy: (slot, text, _context, effort) => dummyFormDecide(slot, text, effort),
+  minChars: 4,
+};
 
 const ACCENTS: Record<SlotId, string> = {
   jev: "text-amber-300",
@@ -23,9 +31,9 @@ export function Form() {
   const typingTimer = useRef<number | null>(null);
 
   const decisions: Record<SlotId, ReturnType<typeof useLiveDecision>> = {
-    jev: useLiveDecision("jev", text, { effort: "low", sandbox }),
-    haiku: useLiveDecision("haiku", text, { effort: "low", sandbox }),
-    opus: useLiveDecision("opus", text, { effort: opusEffort, sandbox }),
+    jev: useLiveDecision("jev", text, { spec: FORM_SPEC, effort: "low", sandbox }),
+    haiku: useLiveDecision("haiku", text, { spec: FORM_SPEC, effort: "low", sandbox }),
+    opus: useLiveDecision("opus", text, { spec: FORM_SPEC, effort: opusEffort, sandbox }),
   };
   const drive = decisions[driver];
 

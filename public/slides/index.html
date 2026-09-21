@@ -448,7 +448,11 @@
           <li>作ってみて分かったこと・向いている使い方</li>
           <li>技術スタック(Hono + Cloudflare Workers)と、手元で試す方法</li>
         </ul>
-        <aside class="notes">全体で◯分くらい。デモは2つ。最後に GitHub から手元で試せる方法も紹介する。</aside>
+        <aside class="notes">
+          持ち時間30分の配分: 導入(1〜7枚目)7分 → デモ1 バトル(8〜14)11分 → デモ2 フォーム(15〜16)4分 →
+          分かったこと・向き不向き・注意(17〜19)4分 → 技術・試し方・まとめ(20〜22)3分 → 残り1分。
+          模擬面接(appendix)は時間か質疑に余裕があれば見せる。
+        </aside>
       </section>
 
       <!-- 3. System 1 / 2 -->
@@ -985,7 +989,41 @@ npm run dev     <span class="c"># → http://localhost:5173</span></pre>
         <p class="muted small" style="margin-top: 40px">ありがとうございました 🐉</p>
       </section>
 
-      <!-- 23. Appendix -->
+      <!-- 23. Appendix: 模擬面接 -->
+      <section class="slide">
+        <p class="kicker">APPENDIX — 模擬面接</p>
+        <h2>AI を「使い分ける」と、こうなる</h2>
+        <div class="row" style="align-items: stretch">
+          <div class="card">
+            <p class="muted small" style="margin: 0">質問を作る</p>
+            <h3 class="haiku" style="margin-top: 6px">Claude Haiku</h3>
+            <p class="small">文章を書くのは LLM の仕事</p>
+            <div class="big-number haiku" style="font-size: 48px">1回<small> 1.6秒</small></div>
+          </div>
+          <div class="card">
+            <p class="muted small" style="margin: 0">回答中に採点し続ける</p>
+            <h3 class="jev" style="margin-top: 6px">Jev</h3>
+            <p class="small">結論から? 具体例は? 論理性は? を打つたびに</p>
+            <div class="big-number jev" style="font-size: 48px">55回<small> 平均274ms</small></div>
+          </div>
+          <div class="card">
+            <p class="muted small" style="margin: 0">提出したら講評を書く</p>
+            <h3 class="opus" style="margin-top: 6px">Claude Opus</h3>
+            <p class="small">重くて賢い処理は最後の1回だけ</p>
+            <div class="big-number opus" style="font-size: 48px">1回<small> 8.2秒</small></div>
+          </div>
+        </div>
+        <p class="small" style="margin-top: 24px">
+          文字数のチェックは計算なので<b>コード</b>で。「Jev で安く何度も → 難しいところだけ大型 LLM」のカスケード
+        </p>
+        <a class="demo-link" href="/interview">▶ 模擬面接を開く</a>
+        <aside class="notes">
+          時間があれば見せる。「良い回答」「悪い回答」の自動入力ボタンで、Jev の採点がリアルタイムに変わる様子を見せる。
+          悪い回答(「えっと」「たぶん」だらけ)だと、Jev は「自信がなさそう」を確信度100%で当てた。
+        </aside>
+      </section>
+
+      <!-- 24. Appendix: 参考リンク -->
       <section class="slide">
         <p class="kicker">APPENDIX</p>
         <h2>参考リンク</h2>

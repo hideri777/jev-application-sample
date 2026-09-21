@@ -19,6 +19,12 @@ const demos = [
     body: "入力している最中に、部署の振り分け・緊急度・返金依頼かをリアルタイム判定。",
     ready: true,
   },
+  {
+    to: "/interview",
+    title: "模擬面接(appendix)",
+    body: "Claude が質問し、回答中は Jev が即採点、提出したら Opus が講評。AI の使い分けの例。",
+    ready: true,
+  },
 ];
 
 export function Home() {
@@ -30,7 +36,7 @@ export function Home() {
           文章を書かずに「判断」だけを 70〜500ms で返す System One Model を、LLM と並べて体感するデモ。
         </p>
       </div>
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {demos.map((d) =>
           d.ready ? (
             <Link

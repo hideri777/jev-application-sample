@@ -25,15 +25,19 @@ worker/          Hono の API(Cloudflare Worker のエントリ)
   index.ts       ルーティング・合言葉チェック・計測
   jev.ts         Jev(TypeSafe SDK)呼び出し
   claude.ts      Claude(Anthropic SDK)呼び出し。質問を JSON Schema に変換
+  interview.ts   模擬面接の質問づくり・講評(Claude が文章を書く部分)
 shared/
   decision.ts    フロントと Worker で共有する型(質問・回答・API)
+  interview.ts   模擬面接の API の型とテーマ
 src/             React の SPA
   api.ts         /api/decide のクライアント。合言葉は localStorage に保存
   Layout.tsx     ヘッダー・ナビ・ダミーモードの切り替え・合言葉入力
   slots.ts       画面に並べる判断エンジン(Jev・Claude Haiku 4.5・Claude Opus 5)
   pages/         Home / Playground / Battle / Form
   battle/        バトルのルール(engine.ts)と進行(useBattle.ts)
-  form/          フォームの質問・サンプル(questions.ts)と入力中の判定(useLiveDecision.ts)
+  form/          フォームの質問・サンプル(questions.ts)
+  interview/     模擬面接の採点項目・サンプル(rubric.ts)
+  live/          入力中に判定し続ける仕組み(useLiveDecision.ts)。フォームと模擬面接で共通
   sandbox/       ダミーモード(API を呼ばずに動く)。docs/sandbox.md 参照
 docs/            設計書・仕様書
 wrangler.jsonc   Worker の設定。/api/* だけ Worker が先に受け、それ以外は SPA を返す
@@ -85,6 +89,10 @@ Jev と Claude を**同じ質問形式**で呼ぶ唯一の API。質問の書式
 - `latencyMs`: Worker から各 API を呼んで返ってくるまでの時間。フロントはこれとは別にブラウザからの往復時間も測る
 - `probabilities` / `confidence` は Jev だけが返す。Claude は値のみで、`noul` は `true`/`false` を 1/0 にして返す
 - エラーは `{ "error": "..." }`。上流 API の失敗は 502
+
+### `POST /api/interview/question` / `POST /api/interview/feedback`
+
+模擬面接用。Jev は文章を書けないので、質問と講評は Claude が作る。詳しくは [interview.md](interview.md)。
 
 ### `GET /api/status`
 

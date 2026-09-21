@@ -9,7 +9,16 @@ import {
   type ErrorResponse,
   type StatusResponse,
 } from "../shared/decision";
+import {
+  INTERVIEW_THEMES,
+  type FeedbackRequest,
+  type FeedbackResponse,
+  type InterviewTheme,
+  type QuestionRequest,
+  type QuestionResponse,
+} from "../shared/interview";
 import { decideWithClaude } from "./claude";
+import { generateFeedback, generateQuestion } from "./interview";
 import { decideWithJev } from "./jev";
 
 type Bindings = {
@@ -83,6 +92,41 @@ app.post("/decide", async (c) => {
     console.error(`[decide:${body.engine}]`, err);
     const message = err instanceof Error ? err.message : String(err);
     return c.json<ErrorResponse>({ error: message }, 502);
+  }
+});
+
+// ---- 模擬面接(appendix): 文章を書く部分は Claude が担当する ----
+
+app.post("/interview/question", async (c) => {
+  const apiKey = c.env.ANTHROPIC_API_KEY;
+  if (!apiKey) return c.json<ErrorResponse>({ error: "ANTHROPIC_API_KEY が未設定です。ダミーモードで試してください" }, 503);
+  const body = await c.req.json<QuestionRequest>();
+  const theme: InterviewTheme = body.theme in INTERVIEW_THEMES ? body.theme : "strength";
+  const started = Date.now();
+  try {
+    // 質問づくりは速さ優先で Haiku
+    const result = await generateQuestion(apiKey, "claude-haiku-4-5", theme, (body.previous ?? []).slice(-5));
+    return c.json<QuestionResponse>({ ...result, latencyMs: Date.now() - started });
+  } catch (err) {
+    console.error("[interview:question]", err);
+    return c.json<ErrorResponse>({ error: err instanceof Error ? err.message : String(err) }, 502);
+  }
+});
+
+app.post("/interview/feedback", async (c) => {
+  const apiKey = c.env.ANTHROPIC_API_KEY;
+  if (!apiKey) return c.json<ErrorResponse>({ error: "ANTHROPIC_API_KEY が未設定です。ダミーモードで試してください" }, 503);
+  const body = await c.req.json<FeedbackRequest>();
+  if (!body.question || !body.answer) return c.json<ErrorResponse>({ error: "質問と回答が必要です" }, 400);
+  const model: ClaudeModel = CLAUDE_MODELS.includes(body.model as ClaudeModel) ? (body.model as ClaudeModel) : "claude-opus-5";
+  const effort: ClaudeEffort = CLAUDE_EFFORTS.includes(body.effort as ClaudeEffort) ? (body.effort as ClaudeEffort) : "low";
+  const started = Date.now();
+  try {
+    const result = await generateFeedback(apiKey, model, effort, body.question, body.answer.slice(0, 2000), body.scores);
+    return c.json<FeedbackResponse>({ ...result, latencyMs: Date.now() - started });
+  } catch (err) {
+    console.error("[interview:feedback]", err);
+    return c.json<ErrorResponse>({ error: err instanceof Error ? err.message : String(err) }, 502);
   }
 });
 
