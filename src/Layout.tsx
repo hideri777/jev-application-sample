@@ -5,6 +5,7 @@ import { getPasscode, setPasscode } from "./api";
 const links = [
   { to: "/", label: "トップ" },
   { to: "/playground", label: "Playground" },
+  { to: "/battle", label: "バトル" },
 ];
 
 export function Layout() {

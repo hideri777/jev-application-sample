@@ -8,3 +8,8 @@ body {
   @apply bg-slate-950 text-slate-100 antialiased;
   font-family: "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
 }
+
+/* ドラクエ風のドット文字 */
+.font-dq {
+  font-family: "DotGothic16", "Hiragino Sans", sans-serif;
+}

@@ -11,7 +11,7 @@ const demos = [
     to: "/battle",
     title: "ターンバトル",
     body: "ドラクエ風のバトルで、Jev と Claude が同じ敵と戦う。",
-    ready: false,
+    ready: true,
   },
   {
     to: "/form",
