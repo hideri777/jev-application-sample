@@ -49,7 +49,7 @@ export type ClaudeModel = (typeof CLAUDE_MODELS)[number];
 
 export interface DecideRequest {
   engine: Engine;
-  /** Claude のときだけ使う。省略時は claude-opus-5 */
+  /** Claude のときだけ使う。省略時は claude-haiku-4-5 */
   model?: ClaudeModel;
   state: unknown;
   questions: Questions;

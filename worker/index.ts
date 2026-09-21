@@ -36,7 +36,7 @@ app.post("/decide", async (c) => {
 
   const model: ClaudeModel = CLAUDE_MODELS.includes(body.model as ClaudeModel)
     ? (body.model as ClaudeModel)
-    : "claude-opus-5";
+    : "claude-haiku-4-5";
 
   const started = Date.now();
   try {

@@ -42,7 +42,7 @@ type Slot = { status: "idle" | "loading" | "done" | "error"; result?: DecideResu
 export function Playground() {
   const [stateText, setStateText] = useState(JSON.stringify(SAMPLE_STATE, null, 2));
   const [questionsText, setQuestionsText] = useState(JSON.stringify(SAMPLE_QUESTIONS, null, 2));
-  const [model, setModel] = useState<ClaudeModel>("claude-opus-5");
+  const [model, setModel] = useState<ClaudeModel>("claude-haiku-4-5");
   const [slots, setSlots] = useState<Record<Engine, Slot>>({
     jev: { status: "idle" },
     claude: { status: "idle" },
