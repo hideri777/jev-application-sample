@@ -15,14 +15,16 @@ TypeSafe AI の **Jev**(System One Model)の「判断の速さ」を、Claude �
 Node.js 22 以上があれば、クローンしてすぐ動かせる。
 
 ```bash
-git clone <このリポジトリの URL>
-cd jev-application
+git clone https://github.com/hideri777/jev-application-sample.git
+cd jev-application-sample
 npm install
 npm run dev
 ```
 
 http://localhost:5173 を開く。API キーが設定されていないので、自動で**ダミーモード**になる(合言葉も不要)。
 ダミーモードの動きは [docs/sandbox.md](docs/sandbox.md) を参照。
+
+発表スライドは http://localhost:5173/slides/ で開ける(← → でめくる、N でメモ、F で全画面)。
 
 おすすめの試し方:
 
@@ -41,6 +43,7 @@ http://localhost:5173 を開く。API キーが設定されていないので、
 | [docs/form.md](docs/form.md) | 問い合わせフォームの仕様と計測結果 |
 | [docs/sandbox.md](docs/sandbox.md) | ダミーモードの仕様(再現している挙動と応答時間) |
 | [docs/presentation.md](docs/presentation.md) | 発表の構成案・計測結果・進捗と残タスク |
+| [public/slides/index.html](public/slides/index.html) | 発表スライド(1ファイルの HTML。アプリの `/slides/` で開く) |
 
 ## 技術スタック
 

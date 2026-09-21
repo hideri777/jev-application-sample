@@ -1,0 +1,1067 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>判断の速さを体感する — Jev</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /*
+       * 1ファイルで完結するスライド。
+       * ← → / スペース / クリックでめくる、N で話すことのメモ、F で全画面、印刷すると1枚1ページの PDF になる。
+       * 数字の出典は docs/(presentation.md / battle.md / form.md)。
+       */
+      :root {
+        --bg: #0b1020;
+        --panel: #131a2e;
+        --line: #26304d;
+        --text: #e8ecf5;
+        --muted: #9aa5c0;
+        --dim: #5d6887;
+        --jev: #fbbf24;
+        --haiku: #7dd3fc;
+        --opus: #c4b5fd;
+        --good: #6ee7b7;
+        --bad: #fda4af;
+        --accent: #fbbf24;
+        --w: 1280px;
+        --h: 720px;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #05070f;
+        color: var(--text);
+        font-family: "Noto Sans JP", "Hiragino Sans", sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      body {
+        overflow: hidden;
+      }
+
+      /* ---- デッキ ---- */
+      .deck {
+        position: fixed;
+        inset: 0;
+      }
+      .slide {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: var(--w);
+        height: var(--h);
+        padding: 64px 80px 56px;
+        background: var(--bg);
+        border-radius: 6px;
+        display: none;
+        flex-direction: column;
+        transform: translate(-50%, -50%);
+        overflow: hidden;
+      }
+      .slide.active {
+        display: flex;
+      }
+      .slide > .num {
+        position: absolute;
+        right: 32px;
+        bottom: 22px;
+        font: 500 14px "JetBrains Mono", monospace;
+        color: var(--dim);
+      }
+      .slide > .tag {
+        position: absolute;
+        left: 80px;
+        bottom: 22px;
+        font-size: 13px;
+        color: var(--dim);
+        letter-spacing: 0.08em;
+      }
+
+      .progress {
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 3px;
+        background: var(--accent);
+        transition: width 0.25s;
+        z-index: 10;
+      }
+
+      /* ---- 文字 ---- */
+      .kicker {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--accent);
+        letter-spacing: 0.12em;
+        margin: 0 0 12px;
+      }
+      h1 {
+        font-size: 64px;
+        line-height: 1.2;
+        font-weight: 900;
+        margin: 0;
+        letter-spacing: 0.01em;
+      }
+      h2 {
+        font-size: 44px;
+        line-height: 1.3;
+        font-weight: 900;
+        margin: 0 0 32px;
+      }
+      p,
+      li {
+        font-size: 26px;
+        line-height: 1.6;
+      }
+      ul {
+        margin: 0;
+        padding-left: 1.2em;
+      }
+      li + li {
+        margin-top: 10px;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .small {
+        font-size: 20px;
+      }
+      .xs {
+        font-size: 16px;
+      }
+      b,
+      strong {
+        color: #fff;
+      }
+      .hl {
+        color: var(--accent);
+      }
+      .jev {
+        color: var(--jev);
+      }
+      .haiku {
+        color: var(--haiku);
+      }
+      .opus {
+        color: var(--opus);
+      }
+      .good {
+        color: var(--good);
+      }
+      .bad {
+        color: var(--bad);
+      }
+      .dq {
+        font-family: "DotGothic16", sans-serif;
+      }
+      code,
+      pre {
+        font-family: "JetBrains Mono", monospace;
+      }
+      code {
+        font-size: 0.85em;
+        background: #1b2440;
+        padding: 0.1em 0.35em;
+        border-radius: 4px;
+      }
+
+      /* ---- 部品 ---- */
+      .grow {
+        flex: 1;
+      }
+      .center {
+        justify-content: center;
+      }
+      .row {
+        display: flex;
+        gap: 32px;
+      }
+      .row > * {
+        flex: 1;
+      }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 24px 28px;
+      }
+      .card h3 {
+        margin: 0 0 10px;
+        font-size: 26px;
+      }
+      .card p,
+      .card li {
+        font-size: 21px;
+      }
+      .big-number {
+        font: 700 76px/1 "JetBrains Mono", monospace;
+        letter-spacing: -0.02em;
+      }
+      .big-number small {
+        font-size: 28px;
+        color: var(--muted);
+        margin-left: 4px;
+      }
+      pre {
+        margin: 0;
+        background: #0e1428;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 20px 24px;
+        font-size: 18px;
+        line-height: 1.55;
+        color: #cdd6f4;
+        overflow: hidden;
+      }
+      .code-row pre {
+        font-size: 15.5px;
+        line-height: 1.4;
+        padding: 16px 20px;
+      }
+      pre .k {
+        color: #89b4fa;
+      }
+      pre .s {
+        color: #a6e3a1;
+      }
+      pre .n {
+        color: #fab387;
+      }
+      pre .c {
+        color: #6c7699;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 22px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--line);
+      }
+      th {
+        color: var(--muted);
+        font-weight: 500;
+        font-size: 18px;
+      }
+      table.compact th,
+      table.compact td {
+        padding: 5px 10px;
+      }
+      td.num-cell {
+        font-family: "JetBrains Mono", monospace;
+      }
+      .pill {
+        display: inline-block;
+        padding: 2px 12px;
+        border-radius: 999px;
+        font-size: 18px;
+        font-weight: 700;
+      }
+      .pill.win {
+        background: #064e3b;
+        color: var(--good);
+      }
+      .pill.lose {
+        background: #4c0519;
+        color: var(--bad);
+      }
+      .demo-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 24px;
+        padding: 12px 22px;
+        border-radius: 10px;
+        background: var(--accent);
+        color: #111;
+        font-weight: 700;
+        font-size: 22px;
+        text-decoration: none;
+        width: fit-content;
+      }
+      .demo-link:hover {
+        filter: brightness(1.08);
+      }
+      a {
+        color: var(--haiku);
+      }
+
+      /* 横棒グラフ(応答時間の比較) */
+      .bars {
+        display: grid;
+        grid-template-columns: 170px 1fr 120px;
+        gap: 14px 18px;
+        align-items: center;
+      }
+      .bars .label {
+        font-size: 22px;
+        font-weight: 700;
+      }
+      .bars .track {
+        height: 30px;
+        background: #0e1428;
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      .bars .fill {
+        height: 100%;
+        border-radius: 6px;
+      }
+      .bars .val {
+        font: 600 22px "JetBrains Mono", monospace;
+        text-align: right;
+      }
+
+      /* 表紙 */
+      .cover {
+        justify-content: center;
+        background:
+          radial-gradient(1000px 500px at 85% 20%, rgba(251, 191, 36, 0.12), transparent 60%),
+          radial-gradient(800px 500px at 10% 90%, rgba(196, 181, 253, 0.1), transparent 60%),
+          var(--bg);
+      }
+      .cover h1 {
+        font-size: 76px;
+      }
+      .divider {
+        justify-content: center;
+      }
+      .divider h1 {
+        font-size: 72px;
+      }
+
+      /* 話すことのメモ */
+      .notes {
+        display: none;
+      }
+      .notes-panel {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        max-height: 34vh;
+        overflow: auto;
+        background: rgba(10, 14, 28, 0.96);
+        border-top: 1px solid var(--line);
+        padding: 16px 28px 20px;
+        font-size: 17px;
+        line-height: 1.7;
+        color: #d7ddeb;
+        display: none;
+        z-index: 20;
+      }
+      .notes-panel.open {
+        display: block;
+      }
+      .notes-panel h4 {
+        margin: 0 0 6px;
+        font-size: 13px;
+        color: var(--dim);
+        letter-spacing: 0.1em;
+      }
+      .help {
+        position: fixed;
+        right: 14px;
+        top: 10px;
+        font-size: 12px;
+        color: #3f4866;
+        z-index: 5;
+      }
+
+      /* 印刷(PDF 書き出し): 1枚1ページ */
+      @media print {
+        @page {
+          size: 1280px 720px;
+          margin: 0;
+        }
+        html,
+        body {
+          background: var(--bg);
+          overflow: visible;
+          height: auto;
+        }
+        .deck {
+          position: static;
+          display: block;
+        }
+        .slide {
+          position: relative;
+          left: auto;
+          top: auto;
+          display: flex !important;
+          transform: none !important;
+          border-radius: 0;
+          page-break-after: always;
+          break-after: page;
+        }
+        .progress,
+        .notes-panel,
+        .help {
+          display: none !important;
+        }
+        * {
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="progress" id="progress"></div>
+    <div class="help">← → でめくる ・ N メモ ・ F 全画面</div>
+
+    <main class="deck" id="deck">
+      <!-- 1. 表紙 -->
+      <section class="slide cover">
+        <p class="kicker">社内勉強会 2026-09-26</p>
+        <h1>判断の速さを<br />体感する</h1>
+        <p class="muted" style="font-size: 30px; margin-top: 24px">
+          文章を書かない AI「<span class="jev">Jev</span>」を、Claude と並べて戦わせてみた
+        </p>
+        <p class="muted small" style="margin-top: 48px">hideaki hori</p>
+        <aside class="notes">
+          今日は TypeSafe AI の Jev という、ちょっと変わった AI の話。先週(9/15)アーリーアクセスが始まったばかり。
+          「判断の速さ」がテーマなので、ドラクエ風のバトルで Claude と戦わせたデモを中心に見せる。
+        </aside>
+      </section>
+
+      <!-- 2. 今日の話 -->
+      <section class="slide">
+        <p class="kicker">AGENDA</p>
+        <h2>今日の話</h2>
+        <ul>
+          <li>Jev とは — <b>文章を書かず、判断だけを返す</b> AI</li>
+          <li>デモ1: ドラクエ風バトルで Jev・Claude Haiku・Claude Opus を戦わせる</li>
+          <li>デモ2: 入力中にリアルタイムで判定する問い合わせフォーム</li>
+          <li>作ってみて分かったこと・向いている使い方</li>
+          <li>技術スタック(Hono + Cloudflare Workers)と、手元で試す方法</li>
+        </ul>
+        <aside class="notes">全体で◯分くらい。デモは2つ。最後に GitHub から手元で試せる方法も紹介する。</aside>
+      </section>
+
+      <!-- 3. System 1 / 2 -->
+      <section class="slide">
+        <p class="kicker">BACKGROUND</p>
+        <h2>速い思考と、遅い思考</h2>
+        <div class="row grow" style="align-items: stretch">
+          <div class="card">
+            <h3 class="jev">System 1(速い思考)</h3>
+            <p>直感的・一瞬。<br />「信号が赤 → 止まる」</p>
+            <p class="muted small" style="margin-top: 18px">→ <b class="jev">Jev</b> はここを狙った「System One Model」</p>
+          </div>
+          <div class="card">
+            <h3 class="opus">System 2(遅い思考)</h3>
+            <p>じっくり考える。<br />「旅行の予算と日程を組む」</p>
+            <p class="muted small" style="margin-top: 18px">→ 今の LLM(Claude など)はこちらが得意</p>
+          </div>
+        </div>
+        <p class="muted small" style="margin-top: 24px">ダニエル・カーネマン『ファスト&スロー』の考え方が名前の由来</p>
+        <aside class="notes">
+          カーネマンの System 1 / System 2。今の LLM は文章を1文字ずつ書きながら考えるので、どうしても遅い。
+          Jev は「速い思考」のほうを担当する AI、という位置づけ。
+        </aside>
+      </section>
+
+      <!-- 4. Jev とは -->
+      <section class="slide">
+        <p class="kicker">WHAT IS JEV</p>
+        <h2>Jev = 「判断だけ」を返す AI</h2>
+        <div class="row">
+          <div class="card">
+            <p class="muted small" style="margin: 0">応答時間</p>
+            <div class="big-number jev">70<small>〜</small>500<small>ms</small></div>
+            <p class="muted xs" style="margin: 10px 0 0">公式は LLM の 40〜200倍速いと主張</p>
+          </div>
+          <div class="card">
+            <p class="muted small" style="margin: 0">料金(入力)</p>
+            <div class="big-number">$0.042<small>/100万トークン</small></div>
+            <p class="muted xs" style="margin: 10px 0 0">出力は無料(too cheap to meter)</p>
+          </div>
+        </div>
+        <ul style="margin-top: 32px">
+          <li>文章を生成しない。<b>決められた選択肢から、確率付きで選ぶだけ</b></li>
+          <li>選択肢の外の答えは出ない → 形の崩れた出力や「作り話」が起きない</li>
+          <li>TypeSafe AI が 2026-09-15 にアーリーアクセス開始(待機リスト制)</li>
+        </ul>
+        <aside class="notes">
+          文章を書かないので、1回の計算でまとめて答えを出せる。だから速い。
+          「ハルシネーションが起きない」は、あくまで選択肢の外に出ないという意味。選択肢の中で間違えることはある(後で話す)。
+        </aside>
+      </section>
+
+      <!-- 5. API -->
+      <section class="slide">
+        <p class="kicker">API</p>
+        <h2 style="margin-bottom: 18px">状態と質問を渡すと、確率付きの答えが返る</h2>
+        <div class="row grow code-row" style="gap: 24px">
+          <pre><span class="c">// POST /v1/systemone</span>
+{
+  <span class="k">"model"</span>: <span class="s">"jev-latest"</span>,
+  <span class="k">"state"</span>: {
+    <span class="k">"勇者"</span>: { <span class="k">"HP"</span>: <span class="s">"18/100"</span> },
+    <span class="k">"敵"</span>: { <span class="k">"予兆"</span>: <span class="s">"大きく息を吸い込んだ！"</span> }
+  },
+  <span class="k">"questions"</span>: {
+    <span class="k">"action"</span>: {
+      <span class="k">"type"</span>: <span class="s">"choice"</span>,
+      <span class="k">"instructions"</span>: <span class="s">"次にとる最善の行動は？"</span>,
+      <span class="k">"criteria"</span>: {
+        <span class="k">"attack"</span>: <span class="s">"たたかう"</span>,
+        <span class="k">"heal"</span>: <span class="s">"ベホイミで回復"</span>,
+        <span class="k">"defend"</span>: <span class="s">"ぼうぎょ"</span>
+      }
+    }
+  }
+}</pre>
+          <div>
+          <pre><span class="c">// 返ってくるもの</span>
+{
+  <span class="k">"answers"</span>: {
+    <span class="k">"action"</span>: {
+      <span class="k">"choice"</span>: <span class="s">"heal"</span>,
+      <span class="k">"confidence"</span>: <span class="n">0.62</span>,
+      <span class="k">"probabilities"</span>: {
+        <span class="k">"heal"</span>: <span class="n">0.62</span>,
+        <span class="k">"defend"</span>: <span class="n">0.30</span>,
+        <span class="k">"attack"</span>: <span class="n">0.08</span>
+      }
+    }
+  }
+}</pre>
+            <table class="compact" style="font-size: 17px; margin-top: 12px">
+              <tr><th colspan="2">質問の種類は3つ</th></tr>
+              <tr><td><code>choice</code></td><td>選択肢から選ぶ(最大255個)</td></tr>
+              <tr><td><code>score</code></td><td>段階で評価(2〜10段階)</td></tr>
+              <tr><td><code>noul</code></td><td>Yes / No の確率</td></tr>
+            </table>
+          </div>
+        </div>
+        <aside class="notes">
+          state は文字列でも JSON でもいい。質問は複数並べても遅延はほぼ変わらない。
+          答えは「どれを選んだか」だけでなく、各選択肢の確率が返ってくるのが特徴。
+        </aside>
+      </section>
+
+      <!-- 6. デモの作り -->
+      <section class="slide">
+        <p class="kicker">HOW THE DEMO WORKS</p>
+        <h2>同じ質問を、Jev と Claude に投げる</h2>
+        <div class="row" style="align-items: stretch">
+          <div class="card">
+            <h3>公平にするための工夫</h3>
+            <ul>
+              <li>質問は Jev の形式で1回だけ書く</li>
+              <li>Claude には<b>同じ選択肢しか答えられない</b>ように、構造化出力(JSON Schema)で縛る</li>
+              <li>バトルは<b>同じ乱数の種</b>で、同じドラゴンと戦う</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>並べる3つ</h3>
+            <ul>
+              <li><b class="jev">Jev</b> — 速い判断</li>
+              <li><b class="haiku">Claude Haiku 4.5</b> — Claude で一番速くて安い</li>
+              <li><b class="opus">Claude Opus 5</b> — よく考える(effort で考える量を調整)</li>
+            </ul>
+          </div>
+        </div>
+        <aside class="notes">
+          Claude も「文章で答えて」ではなく、選択肢の enum に縛った JSON で答えさせている。
+          なので答えの形の差ではなく、純粋に速さと判断の中身を比べている。
+        </aside>
+      </section>
+
+      <!-- 7. 速さ -->
+      <section class="slide">
+        <p class="kicker">LATENCY</p>
+        <h2>まず、どれくらい速いか</h2>
+        <p class="muted small" style="margin-top: -12px">バトルの判断1回あたりの平均(実測)</p>
+        <div class="bars grow" style="align-content: center">
+          <span class="label jev">Jev</span>
+          <div class="track"><div class="fill" style="width: 5.1%; background: var(--jev)"></div></div>
+          <span class="val jev">約 0.3秒</span>
+          <span class="label haiku">Haiku 4.5</span>
+          <div class="track"><div class="fill" style="width: 16.3%; background: var(--haiku)"></div></div>
+          <span class="val haiku">約 0.9秒</span>
+          <span class="label opus">Opus(low)</span>
+          <div class="track"><div class="fill" style="width: 41.4%; background: var(--opus)"></div></div>
+          <span class="val opus">約 2.4秒</span>
+          <span class="label opus">Opus(medium)</span>
+          <div class="track"><div class="fill" style="width: 100%; background: var(--opus); opacity: 0.7"></div></div>
+          <span class="val opus">約 5.7秒</span>
+        </div>
+        <p class="small">一番速い Claude(Haiku)と比べても<b class="hl">約3倍</b>、よく考える Opus とは<b class="hl">約18倍</b>の差</p>
+        <aside class="notes">
+          数字は docs/presentation.md と battle.md の実測値。Jev 約 293〜310ms、Haiku 約 0.9〜1.0秒、Opus low 約 2.4秒、Opus medium 約 5.7秒。
+          ネットワークの時間も含む。初回だけは Jev でも 600ms くらいかかる。
+        </aside>
+      </section>
+
+      <!-- 8. 区切り: デモ1 -->
+      <section class="slide divider">
+        <p class="kicker">DEMO 1</p>
+        <h1 class="dq">ドラゴンが あらわれた！</h1>
+        <p class="muted" style="font-size: 28px; margin-top: 24px">
+          Jev・Haiku・Opus が、同じドラゴンと同時に戦う
+        </p>
+        <aside class="notes">ここからデモ。勇者の行動(たたかう・メラミ・ベホイミ・やくそう・ぼうぎょ)を毎回 AI に決めさせる。</aside>
+      </section>
+
+      <!-- 9. バトルのルール -->
+      <section class="slide">
+        <p class="kicker">DEMO 1 — RULES</p>
+        <h2>難易度で「速さが効く」「考える力が効く」を分ける</h2>
+        <div class="row" style="align-items: stretch">
+          <div class="card">
+            <h3 class="jev">かんたん × リアルタイム</h3>
+            <ul>
+              <li>敵は <b>1秒ごとに勝手に</b>攻撃してくる</li>
+              <li>次の行動を<b>予告</b>してくれる</li>
+              <li>「次の攻撃で倒れるか」も計算して渡す</li>
+            </ul>
+            <p class="muted small" style="margin-top: 16px">→ 素早く反応できれば勝てる</p>
+          </div>
+          <div class="card">
+            <h3 class="opus">むずかしい × ターン制</h3>
+            <ul>
+              <li>交互に行動(待ってくれる)</li>
+              <li><b>予告なし</b>。敵は決まった周期で動くが、中身は履歴から読むしかない</li>
+              <li>渡すのは生の数値だけ</li>
+            </ul>
+            <p class="muted small" style="margin-top: 16px">→ 先を読んで計画しないと勝てない</p>
+          </div>
+        </div>
+        <aside class="notes">
+          ゲームのバランスは、ルールで動く自動対戦を数千回まわして決めた。
+          むずかしいは「周期を読める方針」なら勝率約6割、「読まない方針」だと約1割、になるよう調整してある。
+        </aside>
+      </section>
+
+      <!-- 10. かんたんの結果 -->
+      <section class="slide">
+        <p class="kicker">DEMO 1 — かんたん × リアルタイム</p>
+        <h2>速い Jev が勝ち、賢い Opus は間に合わない</h2>
+        <table>
+          <tr>
+            <th></th>
+            <th>結果</th>
+            <th>かかった時間</th>
+            <th>行動回数</th>
+            <th>平均判断時間</th>
+          </tr>
+          <tr>
+            <td class="jev"><b>Jev</b></td>
+            <td><span class="pill win">勝利</span></td>
+            <td class="num-cell">2.5秒</td>
+            <td class="num-cell">8回</td>
+            <td class="num-cell">293ms</td>
+          </tr>
+          <tr>
+            <td class="haiku"><b>Haiku 4.5</b></td>
+            <td><span class="pill win">勝利</span></td>
+            <td class="num-cell">6.6秒</td>
+            <td class="num-cell">7回</td>
+            <td class="num-cell">927ms</td>
+          </tr>
+          <tr>
+            <td class="opus"><b>Opus 5(low)</b></td>
+            <td><span class="pill lose">敗北</span></td>
+            <td class="num-cell">8.0秒</td>
+            <td class="num-cell">2回</td>
+            <td class="num-cell">2,357ms</td>
+          </tr>
+        </table>
+        <p class="small" style="margin-top: 28px">Opus は考えている間に殴られ続け、<b>2回しか動けずに</b>倒れた</p>
+        <a class="demo-link" href="/battle">▶ バトルを開く</a>
+        <aside class="notes">
+          ライブで「かんたん」のまま「たたかう！」を押す。開始1.5秒で Jev は4回、Claude は1回、くらいの差が目に見える。
+          Opus は賢くても、敵を待たせられないと勝てない。
+        </aside>
+      </section>
+
+      <!-- 11. 遅いと判断が古くなる -->
+      <section class="slide">
+        <p class="kicker">INSIGHT</p>
+        <h2>遅いと、判断が「古く」なる</h2>
+        <div class="card dq" style="font-size: 22px; line-height: 2">
+          <span class="bad">ドラゴンは 力をためている…</span><br />
+          <span class="haiku">勇者は 身を守っている</span>　<span class="muted">← ためている間に防御してしまう</span><br />
+          <span class="bad">ドラゴンは 痛恨の一撃！ 勇者は 46 のダメージ</span>　<span class="muted">← 防御が切れた後に大技</span>
+        </div>
+        <ul style="margin-top: 32px">
+          <li>考えている間に状況が変わり、<b>「1つ前の状況」に対する正しい判断</b>をしてしまう</li>
+          <li>速さは快適さの問題ではなく、<b class="hl">判断の正しさそのもの</b>に効く</li>
+        </ul>
+        <aside class="notes">
+          リアルタイムの Claude のログから。判断そのものは間違っていないが、判断が返ってきたときにはもう状況が変わっている。
+          ゲームだけでなく、監視・アラート・UI の反応など、「状況が動くもの」全般に言える。
+        </aside>
+      </section>
+
+      <!-- 12. むずかしいの結果 -->
+      <section class="slide">
+        <p class="kicker">DEMO 1 — むずかしい × ターン制(4戦ずつ)</p>
+        <h2>考える必要があると、立場が逆転する</h2>
+        <table>
+          <tr>
+            <th></th>
+            <th>勝敗</th>
+            <th>負けたときの敵の残りHP(最大210)</th>
+            <th>平均判断時間</th>
+          </tr>
+          <tr>
+            <td class="jev"><b>Jev</b></td>
+            <td><span class="pill lose">0勝4敗</span></td>
+            <td>約190(ほぼ削れない)</td>
+            <td class="num-cell">約 310ms</td>
+          </tr>
+          <tr>
+            <td class="haiku"><b>Haiku 4.5</b></td>
+            <td><span class="pill lose">0勝4敗</span></td>
+            <td>3〜44(あと1〜2手の惜敗)</td>
+            <td class="num-cell">約 1.0秒</td>
+          </tr>
+          <tr>
+            <td class="opus"><b>Opus 5(medium)</b></td>
+            <td><span class="pill win">4勝0敗</span></td>
+            <td>—</td>
+            <td class="num-cell">約 5.7秒</td>
+          </tr>
+        </table>
+        <a class="demo-link" href="/battle">▶ 「むずかしい」で戦わせる</a>
+        <aside class="notes">
+          Opus は1戦1〜2分かかるので、先に Jev と Haiku だけ動かして話を進め、Opus は後から動かす(前回の結果が画面に残る)。
+          Opus の費用は1戦あたり約 $0.15。
+        </aside>
+      </section>
+
+      <!-- 13. 3者の負け方 -->
+      <section class="slide">
+        <p class="kicker">INSIGHT</p>
+        <h2>負け方に、それぞれの性格が出る</h2>
+        <div class="row" style="align-items: stretch">
+          <div class="card">
+            <h3 class="jev">Jev</h3>
+            <p>最初に1回攻撃した後、<b>ずっと防御</b>。4戦とも行動の並びがまったく同じ</p>
+            <p class="muted small">ヒントが無いと、安全そうな選択に逃げる</p>
+          </div>
+          <div class="card">
+            <h3 class="haiku">Haiku</h3>
+            <p>攻めることはできるが、<b>防御のタイミングがずれる</b>。回復も少なめ</p>
+            <p class="muted small">先を読めずに、あと一歩届かない</p>
+          </div>
+          <div class="card">
+            <h3 class="opus">Opus</h3>
+            <p>序盤はメラミで攻め、HP が減れば回復、MP が切れたら通常攻撃</p>
+            <p class="muted small">周期を完全に読めたわけではない(痛恨の前の防御は 3/8)。<b>資源の配分</b>で勝った</p>
+          </div>
+        </div>
+        <aside class="notes">
+          「Opus が周期を読んだから勝った」わけではないのがポイント。計画的に立ち回れる、というのが正確。
+          Jev は計算済みのヒントが無いと崩れる。これは最初の版でも同じ現象が出ていた。
+        </aside>
+      </section>
+
+      <!-- 14. トレードオフ -->
+      <section class="slide">
+        <p class="kicker">TRADE-OFF</p>
+        <h2>速さと、考える力のトレードオフ</h2>
+        <div class="row grow" style="align-items: center">
+          <div class="card" style="text-align: center">
+            <p class="muted small" style="margin: 0">かんたん(時間の制約がきつい)</p>
+            <p style="font-size: 38px; font-weight: 900; margin: 12px 0">
+              <span class="jev">Jev</span> <span class="muted">&gt;</span> <span class="haiku">Haiku</span>
+              <span class="muted">&gt;</span> <span class="opus">Opus</span>
+            </p>
+            <p class="muted small" style="margin: 0">速いほど勝つ</p>
+          </div>
+          <div class="card" style="text-align: center">
+            <p class="muted small" style="margin: 0">むずかしい(よく考える必要がある)</p>
+            <p style="font-size: 38px; font-weight: 900; margin: 12px 0">
+              <span class="opus">Opus</span> <span class="muted">&gt;</span> <span class="haiku">Haiku</span>
+              <span class="muted">&gt;</span> <span class="jev">Jev</span>
+            </p>
+            <p class="muted small" style="margin: 0">考えるほど勝つ</p>
+          </div>
+        </div>
+        <p style="text-align: center">どちらかが上位互換なのではなく、<b class="hl">場面で使い分ける</b>もの</p>
+        <aside class="notes">ここがデモ1のまとめ。次のデモでは、実際の Web システムに組み込むとどうなるかを見せる。</aside>
+      </section>
+
+      <!-- 15. 区切り: デモ2 -->
+      <section class="slide divider">
+        <p class="kicker">DEMO 2</p>
+        <h1>入力しながら判定する<br />問い合わせフォーム</h1>
+        <p class="muted" style="font-size: 28px; margin-top: 24px">Web システムに組み込むと、どう見えるか</p>
+      </section>
+
+      <!-- 16. フォーム -->
+      <section class="slide">
+        <p class="kicker">DEMO 2 — LIVE FORM</p>
+        <h2>打っている最中に、フォームが変わる</h2>
+        <div class="row" style="align-items: stretch">
+          <div class="card">
+            <h3>1回のリクエストで4つ判定</h3>
+            <ul>
+              <li>担当部署(choice)</li>
+              <li>緊急度(score)</li>
+              <li>返金を求めているか(noul)</li>
+              <li>怒っているか(noul)</li>
+            </ul>
+            <p class="muted small" style="margin-top: 14px">返金なら「注文番号」欄、急ぎなら「優先窓口」の案内がその場で出る</p>
+          </div>
+          <div class="card">
+            <h3>「途中で話が変わる」文を自動入力</h3>
+            <table style="font-size: 20px">
+              <tr>
+                <th></th>
+                <th>約1.8秒時点</th>
+                <th>入力完了後</th>
+              </tr>
+              <tr>
+                <td class="jev"><b>Jev</b></td>
+                <td><b class="good">7文字</b>遅れ</td>
+                <td>判定11回</td>
+              </tr>
+              <tr>
+                <td class="haiku"><b>Haiku</b></td>
+                <td><b class="bad">26文字</b>遅れ</td>
+                <td>判定4回</td>
+              </tr>
+            </table>
+            <p class="muted small" style="margin-top: 14px">どちらも最後は「請求・支払い」に切り替わった</p>
+          </div>
+        </div>
+        <a class="demo-link" href="/form">▶ フォームを開く</a>
+        <aside class="notes">
+          「途中で話が変わる」は「ログインできない…と思ったら解決、ついでに請求書を再発行して」という文。
+          Jev だけが入力にほぼ追いついて、判定が切り替わる様子が見える。「フォームを動かす判定」を Claude に切り替えると、欄が出るのが遅れる。
+        </aside>
+      </section>
+
+      <!-- 17. 分かったこと: state の書き方 -->
+      <section class="slide">
+        <p class="kicker">LESSONS</p>
+        <h2>作ってみて分かったこと</h2>
+        <div class="row" style="align-items: stretch">
+          <div class="card">
+            <h3>計算はコードで済ませる</h3>
+            <p>Jev は計算・数を数えるのが苦手</p>
+            <p class="small">「次の攻撃で倒れるか」をコードで計算して渡したら、<b>防御ばかりの Jev が戦えるようになった</b></p>
+          </div>
+          <div class="card">
+            <h3>指示の一言が強く効く</h3>
+            <p class="small">「基本は攻撃する」と書いたら、今度は <b>Claude が回復を一度も使わず</b>全敗</p>
+            <p class="small">中立に書き直して、Jev 4/6勝・Haiku 3/6勝に落ち着いた</p>
+          </div>
+          <div class="card">
+            <h3>確信度が迷いを教えてくれる</h3>
+            <p class="small">説明が足りないと、確率が横並び(確信度 6%)になる</p>
+            <p class="small">書き方を見直すサインとして使える</p>
+          </div>
+        </div>
+        <aside class="notes">
+          Jev は「書いた質問を、書いたとおりに」読む。否定語や範囲の言葉にも注意。
+          ここは Jev に限らず、LLM に判断させるとき全般に効く話。
+        </aside>
+      </section>
+
+      <!-- 18. 向いている使い方 -->
+      <section class="slide">
+        <p class="kicker">WHERE IT FITS</p>
+        <h2>向いている使い方</h2>
+        <div class="row" style="align-items: stretch">
+          <div class="card">
+            <h3 class="good">向いている</h3>
+            <ul>
+              <li>大量の振り分け・分類(問い合わせ、ログ、チケット)</li>
+              <li>画面操作やゲームなど、<b>状況が動く中での判断</b></li>
+              <li>入力中・操作中のリアルタイムな反応</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3 class="bad">向いていない</h3>
+            <ul>
+              <li>文章を書く・要約する(そもそもできない)</li>
+              <li>計算や、何段階も推論が要る判断</li>
+              <li>画像・音声の入力(今はテキストだけ)</li>
+            </ul>
+          </div>
+        </div>
+        <div class="card" style="margin-top: 24px">
+          <p style="margin: 0">
+            おすすめの構成は<b class="hl">「カスケード」</b>: Jev で安く振り分け → 単純な処理はコード → 難しいものだけ大型 LLM へ
+          </p>
+        </div>
+        <aside class="notes">
+          カスケードは公式ガイドでもおすすめされている形。模擬面接の appendix を作るなら、まさにこの形(Claude が質問、Jev が即採点)。
+        </aside>
+      </section>
+
+      <!-- 19. 批判的な意見 -->
+      <section class="slide">
+        <p class="kicker">CAVEATS</p>
+        <h2>注意点と、批判的な意見</h2>
+        <ul>
+          <li>精度は大型 LLM と同じくらい(独自ベンチで約68%)。<b>選択肢の中で間違えることはある</b></li>
+          <li>普通の LLM でも、答えを1トークンに絞れば近い速さが出せるのでは? という指摘もある</li>
+          <li>ユーザーの入力を state に入れると、答えを誘導されうる(対策が必要)</li>
+          <li><code>jev-latest</code> は予告なく更新される。しきい値を調整するならバージョンを固定する</li>
+          <li>まだアーリーアクセス。待機リスト制</li>
+        </ul>
+        <p class="muted xs" style="margin-top: 28px">
+          出典: TypeSafe AI 公式ブログ / API リファレンス、Sean Goedecke「Jev means structured output is interesting again」ほか(docs/jev.md)
+        </p>
+        <aside class="notes">持ち上げすぎないように、弱点と批判も紹介しておく。</aside>
+      </section>
+
+      <!-- 20. 技術スタック -->
+      <section class="slide">
+        <p class="kicker">TECH STACK</p>
+        <h2>デモの作り: Hono + Cloudflare Workers</h2>
+        <div class="row" style="align-items: stretch">
+          <div class="card">
+            <h3>構成</h3>
+            <ul>
+              <li>API: <b>Hono</b>(Jev・Claude の呼び出しと計測)</li>
+              <li>画面: <b>React + Vite</b>(SPA)</li>
+              <li>デプロイ: <b>Cloudflare Workers</b>(画面も API も1つの Worker)</li>
+              <li><code>wrangler deploy</code> 1回で公開。無料枠で足りる</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>AWS で作るなら</h3>
+            <ul>
+              <li>S3 + CloudFront + Lambda(Hono は Lambda でも動く)</li>
+              <li>IaC・API Gateway などの準備が要り、3日だと重め</li>
+              <li>業務は AWS なので、勉強がてら Workers を試した</li>
+            </ul>
+          </div>
+        </div>
+        <aside class="notes">
+          vinext(Next.js 互換)や TanStack Start も検討したが、サーバーは Hono が担うので SPA で十分と判断。詳しくは docs/design.md。
+        </aside>
+      </section>
+
+      <!-- 21. 手元で試す -->
+      <section class="slide">
+        <p class="kicker">TRY IT</p>
+        <h2>手元で試せます(API キー不要)</h2>
+        <pre style="font-size: 22px">git clone git@github.com:hideri777/jev-application-sample.git
+cd jev-application-sample
+npm install
+npm run dev     <span class="c"># → http://localhost:5173</span></pre>
+        <ul style="margin-top: 28px">
+          <li>キーが無いと自動で<b class="good">ダミーモード</b>になる(API を呼ばない・合言葉も不要)</li>
+          <li>ダミーモードは、今日見せた挙動と応答時間を再現して動く</li>
+          <li>キーを持っている人は <code>.dev.vars</code> に入れれば本物で動く</li>
+        </ul>
+        <aside class="notes">
+          ダミーモードの中身は docs/sandbox.md。バトルは検証で見えた挙動をルールで再現していて、Opus だけ先読みで動かしている。
+        </aside>
+      </section>
+
+      <!-- 22. まとめ -->
+      <section class="slide cover">
+        <p class="kicker">SUMMARY</p>
+        <h1 style="font-size: 60px">まとめ</h1>
+        <ul style="margin-top: 32px">
+          <li><b class="jev">Jev</b> は、文章を書かない代わりに <b>0.3秒で判断</b>する AI</li>
+          <li>状況が動く場面では、<b>速さが判断の正しさ</b>を決める</li>
+          <li>よく考える場面では、<b class="opus">Opus</b> のような LLM が強い</li>
+          <li>両方を<b class="hl">場面で使い分ける</b>のが実用的</li>
+        </ul>
+        <p class="muted small" style="margin-top: 40px">ありがとうございました 🐉</p>
+      </section>
+
+      <!-- 23. Appendix -->
+      <section class="slide">
+        <p class="kicker">APPENDIX</p>
+        <h2>参考リンク</h2>
+        <ul class="small">
+          <li>
+            TypeSafe AI 公式ブログ:
+            <a href="https://typesafe.ai/blog/introducing-system-one-models-and-jev">Introducing System One Models &amp; Jev</a>
+          </li>
+          <li>API リファレンス: <a href="https://docs.typesafe.ai/api">docs.typesafe.ai/api</a></li>
+          <li>公式の Doom デモ: <a href="https://github.com/lukaske/jev-doom-agent">lukaske/jev-doom-agent</a></li>
+          <li>
+            批判的な考察:
+            <a href="https://www.seangoedecke.com/jev-means-structured-output-is-interesting-again/">Jev means structured output is interesting again</a>
+          </li>
+          <li>このデモのリポジトリ: <a href="https://github.com/hideri777/jev-application-sample">hideri777/jev-application-sample</a></li>
+        </ul>
+        <p class="muted xs" style="margin-top: 32px">
+          デモの仕様・計測結果の詳細はリポジトリの docs/ にまとめています
+        </p>
+      </section>
+    </main>
+
+    <div class="notes-panel" id="notes"><h4>メモ(N で閉じる)</h4><div id="notes-body"></div></div>
+
+    <script>
+      const slides = [...document.querySelectorAll(".slide")];
+      const progress = document.getElementById("progress");
+      const notesPanel = document.getElementById("notes");
+      const notesBody = document.getElementById("notes-body");
+
+      // 各スライドに通し番号を振る
+      slides.forEach((s, i) => {
+        const n = document.createElement("span");
+        n.className = "num";
+        n.textContent = `${i + 1} / ${slides.length}`;
+        s.appendChild(n);
+      });
+
+      let current = 0;
+
+      function fit() {
+        const scale = Math.min(window.innerWidth / 1280, window.innerHeight / 720) * 0.98;
+        slides.forEach((s) => (s.style.transform = `translate(-50%, -50%) scale(${scale})`));
+      }
+
+      function show(i) {
+        current = Math.max(0, Math.min(slides.length - 1, i));
+        slides.forEach((s, k) => s.classList.toggle("active", k === current));
+        progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+        const note = slides[current].querySelector(".notes");
+        notesBody.textContent = note ? note.textContent.trim().replace(/\s+/g, " ") : "(メモなし)";
+        history.replaceState(null, "", `#${current + 1}`);
+      }
+
+      document.addEventListener("keydown", (e) => {
+        if (["ArrowRight", "PageDown", " ", "Enter"].includes(e.key)) show(current + 1);
+        else if (["ArrowLeft", "PageUp", "Backspace"].includes(e.key)) show(current - 1);
+        else if (e.key === "Home") show(0);
+        else if (e.key === "End") show(slides.length - 1);
+        else if (e.key.toLowerCase() === "n") notesPanel.classList.toggle("open");
+        else if (e.key.toLowerCase() === "f") {
+          if (document.fullscreenElement) document.exitFullscreen();
+          else document.documentElement.requestFullscreen?.();
+        } else return;
+        e.preventDefault();
+      });
+
+      // クリックでめくる(左3割なら戻る)。リンクのクリックはそのまま
+      document.getElementById("deck").addEventListener("click", (e) => {
+        if (e.target.closest("a")) return;
+        show(e.clientX < window.innerWidth * 0.3 ? current - 1 : current + 1);
+      });
+
+      window.addEventListener("resize", fit);
+      fit();
+      show(Number(location.hash.slice(1)) - 1 || 0);
+    </script>
+  </body>
+</html>

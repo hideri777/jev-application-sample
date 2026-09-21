@@ -32,6 +32,10 @@ export function Layout() {
                 {l.label}
               </NavLink>
             ))}
+            {/* スライドは SPA の外(public/slides/)にある静的 HTML なので、普通のリンクで開く */}
+            <a href="/slides/" className="text-slate-400 hover:text-slate-200">
+              スライド
+            </a>
           </nav>
           <div className="ml-auto flex items-center gap-3 text-sm">
             <label
