@@ -30,8 +30,9 @@ shared/
 src/             React の SPA
   api.ts         /api/decide のクライアント。合言葉は localStorage に保存
   Layout.tsx     ヘッダー・ナビ・合言葉入力
-  pages/         Home / Playground / Battle
+  pages/         Home / Playground / Battle / Form
   battle/        バトルのルール(engine.ts)と進行(useBattle.ts)
+  form/          フォームの質問・サンプル(questions.ts)と入力中の判定(useLiveDecision.ts)
 docs/            設計書・仕様書
 wrangler.jsonc   Worker の設定。/api/* だけ Worker が先に受け、それ以外は SPA を返す
 ```

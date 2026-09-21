@@ -17,7 +17,7 @@ const demos = [
     to: "/form",
     title: "問い合わせフォーム",
     body: "入力している最中に、部署の振り分け・緊急度・返金依頼かをリアルタイム判定。",
-    ready: false,
+    ready: true,
   },
 ];
 

@@ -7,7 +7,7 @@ TypeSafe AI の **Jev**(System One Model)の「判断の速さ」を、Claude �
 
 - **Playground**: 同じ状態と質問を Jev と Claude に同時に投げ、応答時間と答えを比べる
 - **ターンバトル**: ドラクエ風のバトルで Jev と Claude が同じドラゴンと同時に戦う
-- **問い合わせフォーム**(予定): 入力中にリアルタイムで振り分け・緊急度を判定
+- **問い合わせフォーム**: 入力中にリアルタイムで振り分け・緊急度などを判定し、フォームがその場で変わる
 - **模擬面接**(appendix、余裕があれば): Claude が質問し、Jev が回答を即採点
 
 ## ドキュメント
@@ -17,6 +17,7 @@ TypeSafe AI の **Jev**(System One Model)の「判断の速さ」を、Claude �
 | [docs/jev.md](docs/jev.md) | Jev の調査メモ(API・特徴・制約・出典) |
 | [docs/design.md](docs/design.md) | 技術スタックの選定理由、構成、API 仕様 |
 | [docs/battle.md](docs/battle.md) | ターンバトルの仕様とバランス調整の記録 |
+| [docs/form.md](docs/form.md) | 問い合わせフォームの仕様と計測結果 |
 | [docs/presentation.md](docs/presentation.md) | 発表の構成案・計測結果・進捗と残タスク |
 
 ## 技術スタック

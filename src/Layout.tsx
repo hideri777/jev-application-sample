@@ -6,6 +6,7 @@ const links = [
   { to: "/", label: "トップ" },
   { to: "/playground", label: "Playground" },
   { to: "/battle", label: "バトル" },
+  { to: "/form", label: "フォーム" },
 ];
 
 export function Layout() {
