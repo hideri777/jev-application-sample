@@ -1,6 +1,4 @@
-import { useState } from "react";
 import { NavLink, Outlet } from "react-router";
-import { getPasscode, setPasscode } from "./api";
 import { useSandbox } from "./sandbox/SandboxContext";
 
 const links = [
@@ -12,7 +10,6 @@ const links = [
 ];
 
 export function Layout() {
-  const [passcode, setPasscodeState] = useState(getPasscode);
   const sandbox = useSandbox();
 
   return (
@@ -41,7 +38,7 @@ export function Layout() {
           <div className="ml-auto flex items-center gap-3 text-sm">
             <label
               className={`flex items-center gap-1.5 ${sandbox.forced ? "text-slate-500" : "text-slate-300"}`}
-              title={sandbox.forced ? "API キーが設定されていないため、ダミーモードで動いています" : undefined}
+              title={sandbox.forced ? "合言葉か API キーが無いため、ダミーモードで動いています" : undefined}
             >
               <input
                 type="checkbox"
@@ -52,15 +49,12 @@ export function Layout() {
               />
               ダミーモード
             </label>
-            {!sandbox.enabled && sandbox.status?.passcodeRequired && (
+            {sandbox.status?.passcodeRequired && (
               <input
                 type="password"
                 placeholder="合言葉"
-                value={passcode}
-                onChange={(e) => {
-                  setPasscodeState(e.target.value);
-                  setPasscode(e.target.value);
-                }}
+                value={sandbox.passcode}
+                onChange={(e) => sandbox.setPasscode(e.target.value)}
                 className="w-32 rounded bg-slate-900 px-2 py-1 outline-none ring-1 ring-slate-700 focus:ring-amber-400"
               />
             )}
@@ -70,7 +64,10 @@ export function Layout() {
           <div className="border-t border-emerald-900/60 bg-emerald-950/40">
             <p className="mx-auto max-w-7xl px-4 py-1.5 text-xs text-emerald-300">
               ダミーモード: API を呼ばず、検証で見えた挙動を再現した事前定義の動きと応答時間で動いています。
-              {sandbox.forced && " API キーが未設定のため、このモードに固定しています(README の「API キーを使う」参照)。"}
+              {sandbox.forcedReason === "no-passcode" &&
+                " 合言葉を入れると、本物の Jev / Claude API で動きます。"}
+              {sandbox.forcedReason === "no-keys" &&
+                " API キーが未設定のため、このモードに固定しています(README の「API キーを使う」参照)。"}
             </p>
           </div>
         )}

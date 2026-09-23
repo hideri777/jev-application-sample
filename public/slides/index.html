@@ -446,12 +446,12 @@
           <li>デモ1: ドラクエ風バトルで Jev・Claude Haiku・Claude Opus を戦わせる</li>
           <li>デモ2: 入力中にリアルタイムで判定する問い合わせフォーム</li>
           <li>作ってみて分かったこと・向いている使い方</li>
-          <li>技術スタック(Hono + Cloudflare Workers)と、手元で試す方法</li>
+          <li>今日のデモは、この場でも後からでも触れます</li>
         </ul>
         <aside class="notes">
           持ち時間30分の配分: 導入(1〜7枚目)7分 → デモ1 バトル(8〜14)11分 → デモ2 フォーム(15〜16)4分 →
-          分かったこと・向き不向き・注意(17〜19)4分 → 技術・試し方・まとめ(20〜22)3分 → 残り1分。
-          模擬面接(appendix)は時間か質疑に余裕があれば見せる。
+          分かったこと・向き不向き・注意(17〜19)4分 → 触ってみて(20)2分 → まとめ(21)1分 → 予備1分。
+          模擬面接(appendix・22)は時間か質疑に余裕があれば見せる。話す内容は docs/script.md。
         </aside>
       </section>
 
@@ -930,49 +930,23 @@
         <aside class="notes">持ち上げすぎないように、弱点と批判も紹介しておく。</aside>
       </section>
 
-      <!-- 20. 技術スタック -->
-      <section class="slide">
-        <p class="kicker">TECH STACK</p>
-        <h2>デモの作り: Hono + Cloudflare Workers</h2>
-        <div class="row" style="align-items: stretch">
-          <div class="card">
-            <h3>構成</h3>
-            <ul>
-              <li>API: <b>Hono</b>(Jev・Claude の呼び出しと計測)</li>
-              <li>画面: <b>React + Vite</b>(SPA)</li>
-              <li>デプロイ: <b>Cloudflare Workers</b>(画面も API も1つの Worker)</li>
-              <li><code>wrangler deploy</code> 1回で公開。無料枠で足りる</li>
-            </ul>
-          </div>
-          <div class="card">
-            <h3>AWS で作るなら</h3>
-            <ul>
-              <li>S3 + CloudFront + Lambda(Hono は Lambda でも動く)</li>
-              <li>IaC・API Gateway などの準備が要り、3日だと重め</li>
-              <li>業務は AWS なので、勉強がてら Workers を試した</li>
-            </ul>
-          </div>
-        </div>
-        <aside class="notes">
-          vinext(Next.js 互換)や TanStack Start も検討したが、サーバーは Hono が担うので SPA で十分と判断。詳しくは docs/design.md。
-        </aside>
-      </section>
-
-      <!-- 21. 手元で試す -->
+      <!-- 20. 触ってみてください -->
       <section class="slide">
         <p class="kicker">TRY IT</p>
-        <h2>手元で試せます(API キー不要)</h2>
-        <pre style="font-size: 22px">git clone git@github.com:hideri777/jev-application-sample.git
-cd jev-application-sample
-npm install
-npm run dev     <span class="c"># → http://localhost:5173</span></pre>
-        <ul style="margin-top: 28px">
-          <li>キーが無いと自動で<b class="good">ダミーモード</b>になる(API を呼ばない・合言葉も不要)</li>
-          <li>ダミーモードは、今日見せた挙動と応答時間を再現して動く</li>
-          <li>キーを持っている人は <code>.dev.vars</code> に入れれば本物で動く</li>
+        <h2>今すぐ触れます</h2>
+        <div class="card" style="text-align: center; padding: 28px">
+          <p class="muted small" style="margin: 0">Cloudflare に上げてあります</p>
+          <p style="font-size: 34px; font-weight: 700; margin: 10px 0 0">jev-demo.hh-jev-demo.workers.dev</p>
+        </div>
+        <ul style="margin-top: 32px">
+          <li><b class="good">合言葉を入れなければ、ダミーの動き</b>で動きます(API は呼ばれません)</li>
+          <li>ダミーでも、今日見せた判断と応答時間をそのまま再現しています</li>
+          <li>本物の API で動かしたい人は、あとで声をかけてください(合言葉をお渡しします)</li>
+          <li>ソースは GitHub にあります: <code>hideri777/jev-application-sample</code></li>
         </ul>
         <aside class="notes">
-          ダミーモードの中身は docs/sandbox.md。バトルは検証で見えた挙動をルールで再現していて、Opus だけ先読みで動かしている。
+          ここで URL を画面に出したまま、少し待って触ってもらう。ダミーは API を呼ばないので、全員が一斉に触っても料金はかからない。
+          クローンして `npm install && npm run dev` でも同じものが動く。
         </aside>
       </section>
 

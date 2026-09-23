@@ -3,7 +3,8 @@
 TypeSafe AI の **Jev**(System One Model)の「判断の速さ」を、Claude と並べて体感するデモアプリ。
 社内勉強会(2026-09-26 土)の発表用。
 
-公開URL: https://jev-demo.hh-jev-demo.workers.dev(API を使うには画面右上に合言葉を入れる)
+公開URL: https://jev-demo.hh-jev-demo.workers.dev
+**合言葉を入れなければダミーモードで動く**(API を呼ばない)。本物の API で動かすには画面右上に合言葉を入れる。
 
 - **Playground**: 同じ状態と質問を Jev と Claude に同時に投げ、応答時間と答えを比べる
 - **ターンバトル**: ドラクエ風のバトルで Jev・Claude Haiku・Claude Opus が同じドラゴンと戦う。難易度で「速さが効く場面」と「考える力が効く場面」を見せ分ける
@@ -43,7 +44,8 @@ http://localhost:5173 を開く。API キーが設定されていないので、
 | [docs/form.md](docs/form.md) | 問い合わせフォームの仕様と計測結果 |
 | [docs/interview.md](docs/interview.md) | 模擬面接(appendix)の仕様と計測結果 |
 | [docs/sandbox.md](docs/sandbox.md) | ダミーモードの仕様(再現している挙動と応答時間) |
-| [docs/presentation.md](docs/presentation.md) | 発表の構成案・計測結果・進捗と残タスク |
+| [docs/presentation.md](docs/presentation.md) | 発表の構成案・時間配分・計測結果・進捗と残タスク |
+| [docs/script.md](docs/script.md) | 発表の台本(スライド1枚ごとに話す内容と操作) |
 | [public/slides/index.html](public/slides/index.html) | 発表スライド(1ファイルの HTML。アプリの `/slides/` で開く) |
 
 ## 技術スタック
