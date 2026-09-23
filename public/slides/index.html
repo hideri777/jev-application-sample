@@ -444,14 +444,14 @@
         <ul>
           <li>Jev とは — <b>文章を書かず、判断だけを返す</b> AI</li>
           <li>デモ1: ドラクエ風バトルで Jev・Claude Haiku・Claude Opus を戦わせる</li>
-          <li>デモ2: 入力中にリアルタイムで判定する問い合わせフォーム</li>
+          <li>デモ2: 問い合わせ30件の一次仕分け(Jev が受けて、迷った分だけ LLM へ)</li>
           <li>作ってみて分かったこと・向いている使い方</li>
           <li>今日のデモは、この場でも後からでも触れます</li>
         </ul>
         <aside class="notes">
-          持ち時間30分の配分: 導入(1〜7枚目)7分 → デモ1 バトル(8〜14)11分 → デモ2 フォーム(15〜16)4分 →
-          分かったこと・向き不向き・注意(17〜19)4分 → 触ってみて(20)2分 → まとめ(21)1分 → 予備1分。
-          模擬面接(appendix・22)は時間か質疑に余裕があれば見せる。話す内容は docs/script.md。
+          持ち時間30分の配分: 導入(1〜7枚目)7分 → デモ1 バトル(8〜14)10分 → デモ2 一次仕分け(15〜17)5分 →
+          分かったこと・階層・注意(18〜20)4分 → 触ってみて(21)2分 → まとめ(22)1分 → 予備1分。
+          模擬面接(appendix・23)は時間か質疑に余裕があれば見せる。話す内容は docs/script.md。
         </aside>
       </section>
 
@@ -806,51 +806,84 @@
       <!-- 15. 区切り: デモ2 -->
       <section class="slide divider">
         <p class="kicker">DEMO 2</p>
-        <h1>入力しながら判定する<br />問い合わせフォーム</h1>
-        <p class="muted" style="font-size: 28px; margin-top: 24px">Web システムに組み込むと、どう見えるか</p>
+        <h1>問い合わせ30件を<br />さばいてみる</h1>
+        <p class="muted" style="font-size: 28px; margin-top: 24px">「使い分け」ではなく「対応の階層」を分ける</p>
+        <aside class="notes">
+          ここからデモ2。実務にありそうな話として、問い合わせの一次仕分けを見せる。
+          ポイントは「Jev か LLM かを選ぶ」のではなく「一次受けは Jev、上がってきたものだけ LLM」という階層の話。
+        </aside>
       </section>
 
-      <!-- 16. フォーム -->
+      <!-- 16. 一次仕分けの仕組み -->
       <section class="slide">
-        <p class="kicker">DEMO 2 — LIVE FORM</p>
-        <h2>打っている最中に、フォームが変わる</h2>
+        <p class="kicker">DEMO 2 — 一次受け → エスカレーション</p>
+        <h2>Jev が全件を受け、迷った分だけ上に上げる</h2>
         <div class="row" style="align-items: stretch">
           <div class="card">
-            <h3>1回のリクエストで4つ判定</h3>
+            <h3 class="jev">層1: Jev(一次受け)</h3>
             <ul>
-              <li>担当部署(choice)</li>
-              <li>緊急度(score)</li>
-              <li>返金を求めているか(noul)</li>
-              <li>怒っているか(noul)</li>
+              <li><b>30件すべて</b>を判定</li>
+              <li>部署・緊急度に加えて<b>確信度</b>が返る</li>
+              <li>確信度が高ければ、そのまま自動で振り分け</li>
             </ul>
-            <p class="muted small" style="margin-top: 14px">返金なら「注文番号」欄、急ぎなら「優先窓口」の案内がその場で出る</p>
           </div>
           <div class="card">
-            <h3>「途中で話が変わる」文を自動入力</h3>
-            <table style="font-size: 20px">
-              <tr>
-                <th></th>
-                <th>約1.8秒時点</th>
-                <th>入力完了後</th>
-              </tr>
-              <tr>
-                <td class="jev"><b>Jev</b></td>
-                <td><b class="good">7文字</b>遅れ</td>
-                <td>判定11回</td>
-              </tr>
-              <tr>
-                <td class="haiku"><b>Haiku</b></td>
-                <td><b class="bad">26文字</b>遅れ</td>
-                <td>判定4回</td>
-              </tr>
-            </table>
-            <p class="muted small" style="margin-top: 14px">どちらも最後は「請求・支払い」に切り替わった</p>
+            <h3 class="opus">層2: Claude Opus(エスカレーション)</h3>
+            <ul>
+              <li><b>確信度が低い件だけ</b>を受け取る</li>
+              <li>最終的な振り分けと<b>理由の一文</b>を書く</li>
+              <li>時間もお金もかけてよい(数が少ないので)</li>
+            </ul>
           </div>
         </div>
-        <a class="demo-link" href="/form">▶ フォームを開く</a>
+        <p class="small" style="margin-top: 22px">
+          しきい値(例: 確信度 0.6)を動かすと、「自動で流す割合」と「人・LLM に回す割合」を調整できる
+        </p>
+        <a class="demo-link" href="/triage">▶ 一次仕分けを開く</a>
         <aside class="notes">
-          「途中で話が変わる」は「ログインできない…と思ったら解決、ついでに請求書を再発行して」という文。
-          Jev だけが入力にほぼ追いついて、判定が切り替わる様子が見える。「フォームを動かす判定」を Claude に切り替えると、欄が出るのが遅れる。
+          確信度は Jev が返す確率分布から出てくる値。これがあるから「迷ったかどうか」で機械的に振り分けられる。
+          ライブではしきい値のスライダーを動かして、エスカレーション件数が増減するのを見せると分かりやすい。
+        </aside>
+      </section>
+
+      <!-- 17. 一次仕分けの結果 -->
+      <section class="slide">
+        <p class="kicker">DEMO 2 — 結果(問い合わせ30件・実測)</p>
+        <h2>7.6秒・2円弱で30件をさばく</h2>
+        <table>
+          <tr>
+            <th></th>
+            <th>件数</th>
+            <th>時間</th>
+            <th>料金</th>
+          </tr>
+          <tr>
+            <td class="jev"><b>層1: Jev</b></td>
+            <td class="num-cell">30件(平均 253ms)</td>
+            <td class="num-cell">1.5秒</td>
+            <td class="num-cell">$0.0007</td>
+          </tr>
+          <tr>
+            <td class="opus"><b>層2: Opus</b></td>
+            <td class="num-cell">3件(10%)</td>
+            <td class="num-cell">6.1秒</td>
+            <td class="num-cell">$0.016</td>
+          </tr>
+          <tr>
+            <td class="muted">参考: 全部 Opus</td>
+            <td class="num-cell muted">30件</td>
+            <td class="num-cell bad">26.1秒</td>
+            <td class="num-cell bad">$0.153</td>
+          </tr>
+        </table>
+        <p class="small" style="margin-top: 26px">
+          階層にすると <b class="hl">時間は約3分の1、料金は約10分の1</b>。しかも Opus は、Jev が迷った1件を
+          「請求 → 配送」に直した(誤配送なので、まず配送部門で事実確認が必要)
+        </p>
+        <aside class="notes">
+          料金の桁が小さく見えるが、これは30件の話。月1万件なら Jev だけで約30円、全部 Opus なら約7,600円。
+          直した1件は T-116「届いた商品が注文したものと違います。交換か返金を」。Jev は「返金」に引っ張られて請求と判定(確信度56%)。
+          Opus は誤配送と読んで配送に振り直した。確信度が低い件を上げる仕組みが効いた例。
         </aside>
       </section>
 
@@ -884,32 +917,33 @@
       <!-- 18. 向いている使い方 -->
       <section class="slide">
         <p class="kicker">WHERE IT FITS</p>
-        <h2>向いている使い方</h2>
+        <h2>使い分けというより、対応の階層</h2>
         <div class="row" style="align-items: stretch">
           <div class="card">
-            <h3 class="good">向いている</h3>
+            <h3 class="good">層1(Jev)に置くもの</h3>
             <ul>
               <li>大量の振り分け・分類(問い合わせ、ログ、チケット)</li>
               <li>画面操作やゲームなど、<b>状況が動く中での判断</b></li>
-              <li>入力中・操作中のリアルタイムな反応</li>
+              <li>全件に必ず通す「一次受け」</li>
             </ul>
           </div>
           <div class="card">
-            <h3 class="bad">向いていない</h3>
+            <h3 class="bad">層2(LLM)に上げるもの</h3>
             <ul>
-              <li>文章を書く・要約する(そもそもできない)</li>
-              <li>計算や、何段階も推論が要る判断</li>
-              <li>画像・音声の入力(今はテキストだけ)</li>
+              <li>文章を書く・要約する(Jev はそもそもできない)</li>
+              <li>何段階も推論が要る判断、例外的な事案</li>
+              <li>Jev が<b>迷った</b>件(確信度が低いもの)</li>
             </ul>
           </div>
         </div>
         <div class="card" style="margin-top: 24px">
           <p style="margin: 0">
-            おすすめの構成は<b class="hl">「カスケード」</b>: Jev で安く振り分け → 単純な処理はコード → 難しいものだけ大型 LLM へ
+            <b>層0: コード</b>(計算・確定ルール) → <b class="jev">層1: Jev</b>(全件を一次受け・確信度で振り分け) →
+            <b class="opus">層2: LLM</b>(上がってきた数%だけ)
           </p>
         </div>
         <aside class="notes">
-          カスケードは公式ガイドでもおすすめされている形。模擬面接の appendix を作るなら、まさにこの形(Claude が質問、Jev が即採点)。
+この形は公式ガイドでも「カスケード」としてすすめられている。デモ2がまさにこの形。appendix の模擬面接も同じ考え方。
         </aside>
       </section>
 

@@ -17,7 +17,9 @@ import {
   type QuestionRequest,
   type QuestionResponse,
 } from "../shared/interview";
+import type { EscalateRequest, EscalateResponse } from "../shared/decision";
 import { decideWithClaude } from "./claude";
+import { escalate } from "./triage";
 import { generateFeedback, generateQuestion } from "./interview";
 import { decideWithJev } from "./jev";
 
@@ -92,6 +94,23 @@ app.post("/decide", async (c) => {
     console.error(`[decide:${body.engine}]`, err);
     const message = err instanceof Error ? err.message : String(err);
     return c.json<ErrorResponse>({ error: message }, 502);
+  }
+});
+
+app.post("/triage/escalate", async (c) => {
+  const apiKey = c.env.ANTHROPIC_API_KEY;
+  if (!apiKey) return c.json<ErrorResponse>({ error: "ANTHROPIC_API_KEY が未設定です。ダミーモードで試してください" }, 503);
+  const body = await c.req.json<EscalateRequest>();
+  if (!body.text || !body.departments) return c.json<ErrorResponse>({ error: "text と departments が必要です" }, 400);
+  const model: ClaudeModel = CLAUDE_MODELS.includes(body.model as ClaudeModel) ? (body.model as ClaudeModel) : "claude-opus-5";
+  const effort: ClaudeEffort = CLAUDE_EFFORTS.includes(body.effort as ClaudeEffort) ? (body.effort as ClaudeEffort) : "low";
+  const started = Date.now();
+  try {
+    const result = await escalate(apiKey, model, effort, body.text.slice(0, 1000), body.departments);
+    return c.json<EscalateResponse>({ ...result, latencyMs: Date.now() - started });
+  } catch (err) {
+    console.error("[triage:escalate]", err);
+    return c.json<ErrorResponse>({ error: err instanceof Error ? err.message : String(err) }, 502);
   }
 });
 

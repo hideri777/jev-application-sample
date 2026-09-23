@@ -26,6 +26,7 @@ worker/          Hono の API(Cloudflare Worker のエントリ)
   jev.ts         Jev(TypeSafe SDK)呼び出し
   claude.ts      Claude(Anthropic SDK)呼び出し。質問を JSON Schema に変換
   interview.ts   模擬面接の質問づくり・講評(Claude が文章を書く部分)
+  triage.ts      一次仕分けのエスカレーション(Claude が最終判断と理由を書く)
 shared/
   decision.ts    フロントと Worker で共有する型(質問・回答・API)
   interview.ts   模擬面接の API の型とテーマ
@@ -36,6 +37,7 @@ src/             React の SPA
   pages/         Home / Playground / Battle / Form
   battle/        バトルのルール(engine.ts)と進行(useBattle.ts)
   form/          フォームの質問・サンプル(questions.ts)
+  triage/        一次仕分けのサンプル(samples.ts)と料金の概算(pricing.ts)
   interview/     模擬面接の採点項目・サンプル(rubric.ts)
   live/          入力中に判定し続ける仕組み(useLiveDecision.ts)。フォームと模擬面接で共通
   sandbox/       ダミーモード(API を呼ばずに動く)。docs/sandbox.md 参照
@@ -89,6 +91,11 @@ Jev と Claude を**同じ質問形式**で呼ぶ唯一の API。質問の書式
 - `latencyMs`: Worker から各 API を呼んで返ってくるまでの時間。フロントはこれとは別にブラウザからの往復時間も測る
 - `probabilities` / `confidence` は Jev だけが返す。Claude は値のみで、`noul` は `true`/`false` を 1/0 にして返す
 - エラーは `{ "error": "..." }`。上流 API の失敗は 502
+
+### `POST /api/triage/escalate`
+
+一次仕分けで Jev が迷った件を Claude に回す。`{ model?, effort?, text, departments }` → `{ model, department, urgency, reason, latencyMs, usage }`。
+既定は Opus 5 / effort low。`reason` は振り分けた理由の一文(文章なので Jev にはできない)。詳しくは [triage.md](triage.md)。
 
 ### `POST /api/interview/question` / `POST /api/interview/feedback`
 

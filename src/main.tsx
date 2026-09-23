@@ -7,6 +7,7 @@ import { Form } from "./pages/Form";
 import { Home } from "./pages/Home";
 import { Interview } from "./pages/Interview";
 import { Playground } from "./pages/Playground";
+import { Triage } from "./pages/Triage";
 import { SandboxProvider } from "./sandbox/SandboxContext";
 import "./styles.css";
 
@@ -19,6 +20,7 @@ createRoot(document.getElementById("root")!).render(
             <Route index element={<Home />} />
             <Route path="playground" element={<Playground />} />
             <Route path="battle" element={<Battle />} />
+            <Route path="triage" element={<Triage />} />
             <Route path="form" element={<Form />} />
             <Route path="interview" element={<Interview />} />
           </Route>

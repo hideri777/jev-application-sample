@@ -5,6 +5,7 @@ const links = [
   { to: "/", label: "トップ" },
   { to: "/playground", label: "Playground" },
   { to: "/battle", label: "バトル" },
+  { to: "/triage", label: "一次仕分け" },
   { to: "/form", label: "フォーム" },
   { to: "/interview", label: "模擬面接" },
 ];

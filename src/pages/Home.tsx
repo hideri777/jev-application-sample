@@ -14,6 +14,12 @@ const demos = [
     ready: true,
   },
   {
+    to: "/triage",
+    title: "一次仕分け",
+    body: "30件の問い合わせを Jev が一次受けし、確信度が低い件だけ Claude Opus に上げる。対応の階層を分ける例。",
+    ready: true,
+  },
+  {
     to: "/form",
     title: "問い合わせフォーム",
     body: "入力している最中に、部署の振り分け・緊急度・返金依頼かをリアルタイム判定。",

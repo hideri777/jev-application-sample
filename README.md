@@ -8,7 +8,8 @@ TypeSafe AI の **Jev**(System One Model)の「判断の速さ」を、Claude �
 
 - **Playground**: 同じ状態と質問を Jev と Claude に同時に投げ、応答時間と答えを比べる
 - **ターンバトル**: ドラクエ風のバトルで Jev・Claude Haiku・Claude Opus が同じドラゴンと戦う。難易度で「速さが効く場面」と「考える力が効く場面」を見せ分ける
-- **問い合わせフォーム**: 入力中に Jev・Haiku・Opus が振り分け・緊急度などを判定し、フォームがその場で変わる
+- **一次仕分け**: 問い合わせ30件を Jev が一次受けし、確信度が低い件だけ Claude Opus に上げる(対応の階層)
+- **問い合わせフォーム**(おまけ): 入力中に Jev・Haiku・Opus が判定し、フォームがその場で変わる
 - **ダミーモード**: API を呼ばず、検証で見えた挙動と応答時間を再現して動く。**API キーなしで手元で試せる**
 
 ## まず手元で試す(API キー不要)
@@ -31,7 +32,7 @@ http://localhost:5173 を開く。API キーが設定されていないので、
 
 1. **バトル** → 「かんたん」のまま「たたかう！」。速い Jev が勝ち、遅い Opus は負ける
 2. **バトル** → 「むずかしい」で「たたかう！」。予告もヒントもないと Jev は崩れ、先読みする Opus が勝つ
-3. **フォーム** → 「途中で話が変わる」を自動入力。Jev だけが入力に追いつき、判定が切り替わる様子が見える
+3. **一次仕分け** → 「Jev で一次受け」→「迷った N 件を Claude に回す」。階層に分けると時間も料金も1桁減る
 - **模擬面接**(appendix): Claude Haiku が質問し、回答中は Jev が即採点し続け、提出したら Claude Opus が講評する。AI の使い分け(カスケード)の例
 
 ## ドキュメント
@@ -41,7 +42,8 @@ http://localhost:5173 を開く。API キーが設定されていないので、
 | [docs/jev.md](docs/jev.md) | Jev の調査メモ(API・特徴・制約・出典) |
 | [docs/design.md](docs/design.md) | 技術スタックの選定理由、構成、API 仕様 |
 | [docs/battle.md](docs/battle.md) | ターンバトルの仕様とバランス調整の記録 |
-| [docs/form.md](docs/form.md) | 問い合わせフォームの仕様と計測結果 |
+| [docs/triage.md](docs/triage.md) | 一次仕分け(デモ2)の仕様と計測結果 |
+| [docs/form.md](docs/form.md) | 問い合わせフォーム(おまけ)の仕様と計測結果 |
 | [docs/interview.md](docs/interview.md) | 模擬面接(appendix)の仕様と計測結果 |
 | [docs/sandbox.md](docs/sandbox.md) | ダミーモードの仕様(再現している挙動と応答時間) |
 | [docs/presentation.md](docs/presentation.md) | 発表の構成案・時間配分・計測結果・進捗と残タスク |

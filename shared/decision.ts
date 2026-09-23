@@ -80,3 +80,22 @@ export interface StatusResponse {
   claude: boolean;
   passcodeRequired: boolean;
 }
+
+/** POST /api/triage/escalate: Jev が迷った件を Claude に回す */
+export interface EscalateRequest {
+  model?: ClaudeModel;
+  effort?: ClaudeEffort;
+  text: string;
+  /** 部署のキー → 説明 */
+  departments: Record<string, string>;
+}
+
+export interface EscalateResponse {
+  model: string;
+  department: string;
+  urgency: number;
+  /** その振り分けにした理由(1文) */
+  reason: string;
+  latencyMs: number;
+  usage: { input_tokens: number; output_tokens: number };
+}
