@@ -426,11 +426,8 @@
       <!-- 1. 表紙 -->
       <section class="slide cover">
         <p class="kicker">社内勉強会 2026-09-26</p>
-        <h1>判断の速さを<br />体感する</h1>
-        <p class="muted" style="font-size: 30px; margin-top: 24px">
-          文章を書かない AI「<span class="jev">Jev</span>」を、Claude と並べて戦わせてみた
-        </p>
-        <p class="muted small" style="margin-top: 48px">hideaki hori</p>
+        <h1>判断特化型 AI<br /><span class="jev">Jev</span> を試してみた</h1>
+        <p class="muted small" style="margin-top: 64px">hideaki hori</p>
         <aside class="notes">
           今日は TypeSafe AI の Jev という、ちょっと変わった AI の話。先週(9/15)アーリーアクセスが始まったばかり。
           「判断の速さ」がテーマなので、ドラクエ風のバトルで Claude と戦わせたデモを中心に見せる。
@@ -442,70 +439,96 @@
         <p class="kicker">AGENDA</p>
         <h2>今日の話</h2>
         <ul>
-          <li>Jev とは — <b>文章を書かず、判断だけを返す</b> AI</li>
+          <li>Jev とは — <b>文章を書かず、判断だけを返す</b> AI。質問の型は3つだけ</li>
           <li>デモ1: ドラクエ風バトルで Jev・Claude Haiku・Claude Opus を戦わせる</li>
           <li>デモ2: 問い合わせ30件の一次仕分け(Jev が受けて、迷った分だけ LLM へ)</li>
           <li>作ってみて分かったこと・向いている使い方</li>
           <li>今日のデモは、この場でも後からでも触れます</li>
         </ul>
         <aside class="notes">
-          持ち時間30分の配分: 導入(1〜7枚目)7分 → デモ1 バトル(8〜14)10分 → デモ2 一次仕分け(15〜17)5分 →
-          分かったこと・階層・注意(18〜20)4分 → 触ってみて(21)2分 → まとめ(22)1分 → 予備1分。
-          模擬面接(appendix・23)は時間か質疑に余裕があれば見せる。話す内容は docs/script.md。
+          持ち時間30分の配分: 導入(1〜10枚目)8分 → デモ1 バトル(11〜16)9分 → デモ2 一次仕分け(17〜19)5分 →
+          分かったこと・階層・注意(20〜22)4分 → 触ってみて(23)2分 → まとめ(24)1分 → 予備1分。
+          模擬面接(appendix・25)は時間か質疑に余裕があれば見せる。話す内容は docs/script.md。
         </aside>
       </section>
 
-      <!-- 3. System 1 / 2 -->
+      <!-- 3. System One Model とは -->
       <section class="slide">
-        <p class="kicker">BACKGROUND</p>
-        <h2>速い思考と、遅い思考</h2>
+        <p class="kicker">WHAT IT IS</p>
+        <h2>Jev は「System One Model」という新しい種類</h2>
+        <p style="margin: 0 0 26px">
+          TypeSafe AI が 2026-09-15 に公開。LLM とは別のクラスの AI として打ち出している
+        </p>
         <div class="row grow" style="align-items: stretch">
           <div class="card">
             <h3 class="jev">System 1(速い思考)</h3>
             <p>直感的・一瞬。<br />「信号が赤 → 止まる」</p>
-            <p class="muted small" style="margin-top: 18px">→ <b class="jev">Jev</b> はここを狙った「System One Model」</p>
+            <p class="muted small" style="margin-top: 16px">→ <b class="jev">Jev</b> が担当するのはこちら</p>
           </div>
           <div class="card">
             <h3 class="opus">System 2(遅い思考)</h3>
             <p>じっくり考える。<br />「旅行の予算と日程を組む」</p>
-            <p class="muted small" style="margin-top: 18px">→ 今の LLM(Claude など)はこちらが得意</p>
+            <p class="muted small" style="margin-top: 16px">→ 今の LLM(Claude など)が得意なのはこちら</p>
           </div>
         </div>
-        <p class="muted small" style="margin-top: 24px">ダニエル・カーネマン『ファスト&スロー』の考え方が名前の由来</p>
+        <p class="muted small" style="margin-top: 22px">
+          名前の由来は、ダニエル・カーネマン『ファスト&スロー』の2つの思考モード
+        </p>
         <aside class="notes">
-          カーネマンの System 1 / System 2。今の LLM は文章を1文字ずつ書きながら考えるので、どうしても遅い。
-          Jev は「速い思考」のほうを担当する AI、という位置づけ。
+          まず「System One Model という新しいクラスを名乗っている」と伝える。そのうえで、その System 1 / System 2 とは何か、という順で話す。
+          今の LLM は文章を1文字ずつ書きながら考えるのでどうしても遅い。Jev は速い思考のほうだけを担当する。
         </aside>
       </section>
 
-      <!-- 4. Jev とは -->
+      <!-- 4. Jev のスペック -->
       <section class="slide">
         <p class="kicker">WHAT IS JEV</p>
         <h2>Jev = 「判断だけ」を返す AI</h2>
-        <div class="row">
-          <div class="card">
+        <div class="row" style="align-items: stretch">
+          <div class="card" style="flex: 0 0 34%">
             <p class="muted small" style="margin: 0">応答時間</p>
-            <div class="big-number jev">70<small>〜</small>500<small>ms</small></div>
+            <div class="big-number jev" style="font-size: 62px">70<small>〜</small>500<small>ms</small></div>
             <p class="muted xs" style="margin: 10px 0 0">公式は LLM の 40〜200倍速いと主張</p>
           </div>
           <div class="card">
-            <p class="muted small" style="margin: 0">料金(入力)</p>
-            <div class="big-number">$0.042<small>/100万トークン</small></div>
-            <p class="muted xs" style="margin: 10px 0 0">出力は無料(too cheap to meter)</p>
+            <p class="muted small" style="margin: 0 0 8px">料金(100万トークンあたり)</p>
+            <table class="compact" style="font-size: 19px">
+              <tr>
+                <th></th>
+                <th>入力</th>
+                <th>出力</th>
+              </tr>
+              <tr>
+                <td class="jev"><b>Jev</b></td>
+                <td class="num-cell">$0.042</td>
+                <td class="num-cell good">無料</td>
+              </tr>
+              <tr>
+                <td class="haiku">Claude Haiku 4.5</td>
+                <td class="num-cell">$1.00 <span class="muted xs">(24倍)</span></td>
+                <td class="num-cell">$5.00</td>
+              </tr>
+              <tr>
+                <td class="opus">Claude Opus 5</td>
+                <td class="num-cell">$5.00 <span class="muted xs">(119倍)</span></td>
+                <td class="num-cell">$25.00</td>
+              </tr>
+            </table>
           </div>
         </div>
-        <ul style="margin-top: 32px">
+        <ul style="margin-top: 26px">
           <li>文章を生成しない。<b>決められた選択肢から、確率付きで選ぶだけ</b></li>
           <li>選択肢の外の答えは出ない → 形の崩れた出力や「作り話」が起きない</li>
-          <li>TypeSafe AI が 2026-09-15 にアーリーアクセス開始(待機リスト制)</li>
+          <li>まだアーリーアクセス(待機リスト制)</li>
         </ul>
         <aside class="notes">
           文章を書かないので、1回の計算でまとめて答えを出せる。だから速い。
+          料金は、入力が Haiku の約24分の1、Opus の約119分の1。そのうえ出力は無料(公式いわく「安すぎて課金しない」)。
           「ハルシネーションが起きない」は、あくまで選択肢の外に出ないという意味。選択肢の中で間違えることはある(後で話す)。
         </aside>
       </section>
 
-      <!-- 5. API -->
+      <!-- 5. API の形 -->
       <section class="slide">
         <p class="kicker">API</p>
         <h2 style="margin-bottom: 18px">状態と質問を渡すと、確率付きの答えが返る</h2>
@@ -558,7 +581,120 @@
         </aside>
       </section>
 
-      <!-- 6. デモの作り -->
+      <!-- 6. 質問の型: choice -->
+      <section class="slide">
+        <p class="kicker">質問の型 1/3 — CHOICE</p>
+        <h2 style="margin-bottom: 22px">choice: 選択肢から1つ選ぶ</h2>
+        <div class="row grow code-row" style="gap: 24px">
+          <pre><span class="c">// 問い合わせを、どの部署に回すか</span>
+{
+  <span class="k">"type"</span>: <span class="s">"choice"</span>,
+  <span class="k">"instructions"</span>: <span class="s">"担当すべき部署は？"</span>,
+  <span class="k">"criteria"</span>: {
+    <span class="k">"billing"</span>:   <span class="s">"請求・支払い・返金"</span>,
+    <span class="k">"technical"</span>: <span class="s">"不具合・エラー"</span>,
+    <span class="k">"account"</span>:   <span class="s">"ログイン・アカウント"</span>,
+    <span class="k">"shipping"</span>:  <span class="s">"配送・届かない"</span>
+  }
+}</pre>
+          <div>
+            <pre><span class="c">// 返り値</span>
+{
+  <span class="k">"choice"</span>: <span class="s">"billing"</span>,
+  <span class="k">"confidence"</span>: <span class="n">0.56</span>,
+  <span class="k">"probabilities"</span>: {
+    <span class="k">"billing"</span>: <span class="n">0.56</span>, <span class="k">"shipping"</span>: <span class="n">0.31</span>,
+    <span class="k">"technical"</span>: <span class="n">0.08</span>, <span class="k">"account"</span>: <span class="n">0.05</span>
+  }
+}</pre>
+            <ul class="small" style="margin-top: 16px">
+              <li>選択肢は最大255個</li>
+              <li>振り分け・行動選択・次に押すボタン</li>
+              <li><b>確信度</b>で「迷ったか」が分かる</li>
+            </ul>
+          </div>
+        </div>
+        <aside class="notes">
+          今日のデモで一番使うのがこれ。バトルの行動選択も、問い合わせの部署振り分けも choice。
+          確率が全部返ってくるので、1位と2位が僅差なら「迷っている」と分かる。デモ2ではこれを使ってエスカレーションを決めている。
+        </aside>
+      </section>
+
+      <!-- 7. 質問の型: score -->
+      <section class="slide">
+        <p class="kicker">質問の型 2/3 — SCORE</p>
+        <h2 style="margin-bottom: 22px">score: 段階で評価する</h2>
+        <div class="row grow code-row" style="gap: 24px">
+          <pre><span class="c">// 問い合わせの緊急度</span>
+{
+  <span class="k">"type"</span>: <span class="s">"score"</span>,
+  <span class="k">"instructions"</span>: <span class="s">"緊急度は？"</span>,
+  <span class="k">"criteria"</span>: [
+    <span class="s">"急ぎではない"</span>,
+    <span class="s">"通常"</span>,
+    <span class="s">"早めの対応が必要"</span>,
+    <span class="s">"今すぐ対応が必要"</span>
+  ]
+}</pre>
+          <div>
+            <pre><span class="c">// 返り値</span>
+{
+  <span class="k">"score"</span>: <span class="n">2.31</span>,  <span class="c">// 段階の「間」も返る</span>
+  <span class="k">"confidence"</span>: <span class="n">0.72</span>,
+  <span class="k">"probabilities"</span>: {
+    <span class="k">"2"</span>: <span class="n">0.61</span>, <span class="k">"3"</span>: <span class="n">0.25</span>,
+    <span class="k">"1"</span>: <span class="n">0.12</span>, <span class="k">"0"</span>: <span class="n">0.02</span>
+  }
+}</pre>
+            <ul class="small" style="margin-top: 16px">
+              <li>2〜10段階まで</li>
+              <li>優先度・リスク・品質の採点</li>
+              <li>整数ではなく<b>連続値</b>で返るので、しきい値を細かく決められる</li>
+            </ul>
+          </div>
+        </div>
+        <aside class="notes">
+          段階の間の値が返るのがポイント。「2.31 なので、2 寄りだが 3 に近い」といった判断ができる。
+          appendix の模擬面接では、回答の論理性をこの型で採点している。
+        </aside>
+      </section>
+
+      <!-- 8. 質問の型: noul -->
+      <section class="slide">
+        <p class="kicker">質問の型 3/3 — NOUL</p>
+        <h2 style="margin-bottom: 22px">noul: Yes / No を確率で返す</h2>
+        <div class="row grow code-row" style="gap: 24px">
+          <pre><span class="c">// 返金を求めているか</span>
+{
+  <span class="k">"type"</span>: <span class="s">"noul"</span>,
+  <span class="k">"instructions"</span>:
+    <span class="s">"返金や返品を求めているか？"</span>
+}
+
+<span class="c">// criteria で Yes / No の意味を</span>
+<span class="c">// 補足することもできる</span></pre>
+          <div>
+            <pre><span class="c">// 返り値</span>
+{
+  <span class="k">"noul"</span>: <span class="n">0.93</span>   <span class="c">// Yes の確率</span>
+}</pre>
+            <ul class="small" style="margin-top: 16px">
+              <li>フラグ判定(返金依頼か・怒っているか・要対応か)</li>
+              <li>0/1 ではなく<b>確率</b>なので、しきい値を場面で変えられる</li>
+              <li>いくつ並べても遅延はほぼ増えない</li>
+            </ul>
+            <p class="muted xs" style="margin-top: 14px">
+              ※ 3つの型は1回のリクエストにまとめて入れられる
+            </p>
+          </div>
+        </div>
+        <aside class="notes">
+          noul は聞き慣れない名前だが、中身は「Yes の確率」。0.5 で切るか 0.8 で切るかは使う側が決める。
+          デモ2では、1回のリクエストに choice と score を一緒に入れている。
+        </aside>
+      </section>
+
+      <!-- 9. デモの作り -->
       <section class="slide">
         <p class="kicker">HOW THE DEMO WORKS</p>
         <h2>同じ質問を、Jev と Claude に投げる</h2>
@@ -586,7 +722,7 @@
         </aside>
       </section>
 
-      <!-- 7. 速さ -->
+      <!-- 10. 速さの比較 -->
       <section class="slide">
         <p class="kicker">LATENCY</p>
         <h2>まず、どれくらい速いか</h2>
@@ -612,7 +748,7 @@
         </aside>
       </section>
 
-      <!-- 8. 区切り: デモ1 -->
+      <!-- 11. 区切り: デモ1 -->
       <section class="slide divider">
         <p class="kicker">DEMO 1</p>
         <h1 class="dq">ドラゴンが あらわれた！</h1>
@@ -622,7 +758,7 @@
         <aside class="notes">ここからデモ。勇者の行動(たたかう・メラミ・ベホイミ・やくそう・ぼうぎょ)を毎回 AI に決めさせる。</aside>
       </section>
 
-      <!-- 9. バトルのルール -->
+      <!-- 12. バトルのルール -->
       <section class="slide">
         <p class="kicker">DEMO 1 — RULES</p>
         <h2>難易度で「速さが効く」「考える力が効く」を分ける</h2>
@@ -652,105 +788,42 @@
         </aside>
       </section>
 
-      <!-- 10. かんたんの結果 -->
-      <section class="slide">
+      <!-- 13. かんたん(デモを見せる) -->
+      <section class="slide center">
         <p class="kicker">DEMO 1 — かんたん × リアルタイム</p>
-        <h2>速い Jev が勝ち、賢い Opus は間に合わない</h2>
-        <table>
-          <tr>
-            <th></th>
-            <th>結果</th>
-            <th>かかった時間</th>
-            <th>行動回数</th>
-            <th>平均判断時間</th>
-          </tr>
-          <tr>
-            <td class="jev"><b>Jev</b></td>
-            <td><span class="pill win">勝利</span></td>
-            <td class="num-cell">2.5秒</td>
-            <td class="num-cell">8回</td>
-            <td class="num-cell">293ms</td>
-          </tr>
-          <tr>
-            <td class="haiku"><b>Haiku 4.5</b></td>
-            <td><span class="pill win">勝利</span></td>
-            <td class="num-cell">6.6秒</td>
-            <td class="num-cell">7回</td>
-            <td class="num-cell">927ms</td>
-          </tr>
-          <tr>
-            <td class="opus"><b>Opus 5(low)</b></td>
-            <td><span class="pill lose">敗北</span></td>
-            <td class="num-cell">8.0秒</td>
-            <td class="num-cell">2回</td>
-            <td class="num-cell">2,357ms</td>
-          </tr>
-        </table>
-        <p class="small" style="margin-top: 28px">Opus は考えている間に殴られ続け、<b>2回しか動けずに</b>倒れた</p>
-        <a class="demo-link" href="/battle">▶ バトルを開く</a>
-        <aside class="notes">
-          ライブで「かんたん」のまま「たたかう！」を押す。開始1.5秒で Jev は4回、Claude は1回、くらいの差が目に見える。
-          Opus は賢くても、敵を待たせられないと勝てない。
-        </aside>
-      </section>
-
-      <!-- 11. 遅いと判断が古くなる -->
-      <section class="slide">
-        <p class="kicker">INSIGHT</p>
-        <h2>遅いと、判断が「古く」なる</h2>
-        <div class="card dq" style="font-size: 22px; line-height: 2">
-          <span class="bad">ドラゴンは 力をためている…</span><br />
-          <span class="haiku">勇者は 身を守っている</span>　<span class="muted">← ためている間に防御してしまう</span><br />
-          <span class="bad">ドラゴンは 痛恨の一撃！ 勇者は 46 のダメージ</span>　<span class="muted">← 防御が切れた後に大技</span>
-        </div>
-        <ul style="margin-top: 32px">
-          <li>考えている間に状況が変わり、<b>「1つ前の状況」に対する正しい判断</b>をしてしまう</li>
-          <li>速さは快適さの問題ではなく、<b class="hl">判断の正しさそのもの</b>に効く</li>
+        <h2 style="margin-bottom: 18px">敵は待ってくれない</h2>
+        <ul style="font-size: 30px">
+          <li>敵は <b>1秒ごと</b> に攻撃してくる</li>
+          <li>次の行動は<b>予告</b>あり・「倒れるか」も計算して渡す</li>
+          <li>3つの AI が、同じドラゴンと同時に戦う</li>
         </ul>
+        <a class="demo-link" href="/battle" style="margin-top: 36px">▶ 実際に見てください</a>
         <aside class="notes">
-          リアルタイムの Claude のログから。判断そのものは間違っていないが、判断が返ってきたときにはもう状況が変わっている。
-          ゲームだけでなく、監視・アラート・UI の反応など、「状況が動くもの」全般に言える。
+          結果はスライドに書かず、その場で見せる。開始1.5秒で Jev は4回、Opus は1回くらいの差が出る。
+          決着後に「Jev 2.5秒で勝ち、Haiku も勝ち、Opus は2回しか動けず敗北」と口頭で拾う。
+          そのあと Claude のログを指して、「力をためている間に防御して、防御が切れてから痛恨の一撃を受けている。
+          考えている間に状況が変わるので、判断が1つ前の状況に対する正解になってしまう」と話す。
         </aside>
       </section>
 
-      <!-- 12. むずかしいの結果 -->
-      <section class="slide">
-        <p class="kicker">DEMO 1 — むずかしい × ターン制(4戦ずつ)</p>
-        <h2>考える必要があると、立場が逆転する</h2>
-        <table>
-          <tr>
-            <th></th>
-            <th>勝敗</th>
-            <th>負けたときの敵の残りHP(最大210)</th>
-            <th>平均判断時間</th>
-          </tr>
-          <tr>
-            <td class="jev"><b>Jev</b></td>
-            <td><span class="pill lose">0勝4敗</span></td>
-            <td>約190(ほぼ削れない)</td>
-            <td class="num-cell">約 310ms</td>
-          </tr>
-          <tr>
-            <td class="haiku"><b>Haiku 4.5</b></td>
-            <td><span class="pill lose">0勝4敗</span></td>
-            <td>3〜44(あと1〜2手の惜敗)</td>
-            <td class="num-cell">約 1.0秒</td>
-          </tr>
-          <tr>
-            <td class="opus"><b>Opus 5(medium)</b></td>
-            <td><span class="pill win">4勝0敗</span></td>
-            <td>—</td>
-            <td class="num-cell">約 5.7秒</td>
-          </tr>
-        </table>
-        <a class="demo-link" href="/battle">▶ 「むずかしい」で戦わせる</a>
+      <!-- 14. むずかしい(予告) -->
+      <section class="slide center">
+        <p class="kicker">DEMO 1 — むずかしい × ターン制</p>
+        <h2 style="margin-bottom: 18px">今度は、待ってくれる</h2>
+        <ul style="font-size: 30px">
+          <li>交互に行動。考える時間はいくらでもある</li>
+          <li>ただし<b>予告なし</b>・ヒントなし。敵の周期は履歴から読むしかない</li>
+          <li>同じ3つの AI で、もう一度戦わせます</li>
+        </ul>
+        <a class="demo-link" href="/battle" style="margin-top: 36px">▶ むずかしいで戦わせる</a>
         <aside class="notes">
-          Opus は1戦1〜2分かかるので、先に Jev と Haiku だけ動かして話を進め、Opus は後から動かす(前回の結果が画面に残る)。
-          Opus の費用は1戦あたり約 $0.15。
+          ここも結果はスライドに書かない。ライブでは Jev と Haiku だけ先に動かし(20〜30秒)、Opus は時間がかかるので
+          次のスライドを話しながら裏で回すか、4戦の結果を口頭で伝える。
+          口頭で言う数字: 4戦ずつで Jev 0勝4敗(敵 HP ほぼ減らず)、Haiku 0勝4敗(あと1〜2手)、Opus 4勝0敗。
         </aside>
       </section>
 
-      <!-- 13. 3者の負け方 -->
+      <!-- 15. 3者の負け方 -->
       <section class="slide">
         <p class="kicker">INSIGHT</p>
         <h2>負け方に、それぞれの性格が出る</h2>
@@ -777,7 +850,7 @@
         </aside>
       </section>
 
-      <!-- 14. トレードオフ -->
+      <!-- 16. トレードオフ -->
       <section class="slide">
         <p class="kicker">TRADE-OFF</p>
         <h2>速さと、考える力のトレードオフ</h2>
@@ -803,18 +876,18 @@
         <aside class="notes">ここがデモ1のまとめ。次のデモでは、実際の Web システムに組み込むとどうなるかを見せる。</aside>
       </section>
 
-      <!-- 15. 区切り: デモ2 -->
+      <!-- 17. 区切り: デモ2 -->
       <section class="slide divider">
         <p class="kicker">DEMO 2</p>
         <h1>問い合わせ30件を<br />さばいてみる</h1>
-        <p class="muted" style="font-size: 28px; margin-top: 24px">「使い分け」ではなく「対応の階層」を分ける</p>
+        <p class="muted" style="font-size: 28px; margin-top: 24px">対応する階層を分ける</p>
         <aside class="notes">
           ここからデモ2。実務にありそうな話として、問い合わせの一次仕分けを見せる。
           ポイントは「Jev か LLM かを選ぶ」のではなく「一次受けは Jev、上がってきたものだけ LLM」という階層の話。
         </aside>
       </section>
 
-      <!-- 16. 一次仕分けの仕組み -->
+      <!-- 18. 一次仕分けの仕組み -->
       <section class="slide">
         <p class="kicker">DEMO 2 — 一次受け → エスカレーション</p>
         <h2>Jev が全件を受け、迷った分だけ上に上げる</h2>
@@ -846,7 +919,7 @@
         </aside>
       </section>
 
-      <!-- 17. 一次仕分けの結果 -->
+      <!-- 19. 一次仕分けの結果 -->
       <section class="slide">
         <p class="kicker">DEMO 2 — 結果(問い合わせ30件・実測)</p>
         <h2>7.6秒・2円弱で30件をさばく</h2>
@@ -887,7 +960,7 @@
         </aside>
       </section>
 
-      <!-- 17. 分かったこと: state の書き方 -->
+      <!-- 20. 分かったこと -->
       <section class="slide">
         <p class="kicker">LESSONS</p>
         <h2>作ってみて分かったこと</h2>
@@ -914,7 +987,7 @@
         </aside>
       </section>
 
-      <!-- 18. 向いている使い方 -->
+      <!-- 21. 対応の階層 -->
       <section class="slide">
         <p class="kicker">WHERE IT FITS</p>
         <h2>使い分けというより、対応の階層</h2>
@@ -947,7 +1020,7 @@
         </aside>
       </section>
 
-      <!-- 19. 批判的な意見 -->
+      <!-- 22. 注意点と批判 -->
       <section class="slide">
         <p class="kicker">CAVEATS</p>
         <h2>注意点と、批判的な意見</h2>
@@ -964,7 +1037,7 @@
         <aside class="notes">持ち上げすぎないように、弱点と批判も紹介しておく。</aside>
       </section>
 
-      <!-- 20. 触ってみてください -->
+      <!-- 23. 触ってみてください -->
       <section class="slide">
         <p class="kicker">TRY IT</p>
         <h2>今すぐ触れます</h2>
@@ -984,7 +1057,7 @@
         </aside>
       </section>
 
-      <!-- 22. まとめ -->
+      <!-- 24. まとめ -->
       <section class="slide cover">
         <p class="kicker">SUMMARY</p>
         <h1 style="font-size: 60px">まとめ</h1>
@@ -997,7 +1070,7 @@
         <p class="muted small" style="margin-top: 40px">ありがとうございました 🐉</p>
       </section>
 
-      <!-- 23. Appendix: 模擬面接 -->
+      <!-- 25. Appendix: 模擬面接 -->
       <section class="slide">
         <p class="kicker">APPENDIX — 模擬面接</p>
         <h2>AI を「使い分ける」と、こうなる</h2>
@@ -1031,7 +1104,7 @@
         </aside>
       </section>
 
-      <!-- 24. Appendix: 参考リンク -->
+      <!-- 26. Appendix: 参考リンク -->
       <section class="slide">
         <p class="kicker">APPENDIX</p>
         <h2>参考リンク</h2>
