@@ -34,6 +34,10 @@ const MODE_LABEL: Record<BattleMode, string> = { realtime: "リアルタイム",
 
 export function Battle() {
   const { arenas, running, runningSlots, start, stop } = useBattle();
+  /** 勝敗の表示を閉じた列(閉じるとログが読める) */
+  const [dismissed, setDismissed] = useState<Record<string, boolean>>({});
+  /** 3列のログを並べて見るモーダル */
+  const [logOpen, setLogOpen] = useState(false);
   const { enabled: sandbox } = useSandbox();
   const [difficulty, setDifficulty] = useState<Difficulty>("easy");
   const [mode, setMode] = useState<BattleMode>(PRESETS.easy.mode);
@@ -49,6 +53,7 @@ export function Battle() {
   };
 
   const slots = SLOT_IDS.filter((id) => selected[id]);
+  const finished = SLOT_IDS.filter((id) => arenas[id].state.result !== null);
   const current: ArenaConditions = { difficulty, mode, enemyIntervalMs, seed, sandbox };
 
   return (
@@ -134,6 +139,14 @@ export function Battle() {
             )}
           </label>
         ))}
+        {!running && finished.length > 0 && (
+          <button
+            onClick={() => setLogOpen(true)}
+            className="rounded px-3 py-1.5 text-slate-300 ring-1 ring-slate-600 hover:text-white hover:ring-amber-400"
+          >
+            ログを並べて見る({finished.length}列)
+          </button>
+        )}
         {running ? (
           <button onClick={stop} className="rounded bg-rose-500 px-4 py-1.5 font-semibold">
             ストップ
@@ -141,7 +154,11 @@ export function Battle() {
         ) : (
           <button
             disabled={slots.length === 0}
-            onClick={() => start({ difficulty, mode, enemyIntervalMs, opusEffort, seed, slots, sandbox })}
+            onClick={() => {
+              setDismissed({});
+              setLogOpen(false);
+              start({ difficulty, mode, enemyIntervalMs, opusEffort, seed, slots, sandbox });
+            }}
             className="rounded bg-amber-400 px-4 py-1.5 font-semibold text-slate-950 hover:bg-amber-300 disabled:opacity-40"
           >
             たたかう！
@@ -165,9 +182,13 @@ export function Battle() {
             arena={arenas[id]}
             current={current}
             isRunning={runningSlots.includes(id)}
+            resultDismissed={dismissed[id] ?? false}
+            onDismissResult={() => setDismissed((d) => ({ ...d, [id]: true }))}
           />
         ))}
       </div>
+
+      {logOpen && <LogModal arenas={arenas} slots={finished} onClose={() => setLogOpen(false)} />}
     </div>
   );
 }
@@ -197,7 +218,14 @@ function ConditionsLine({ arena, current }: { arena: Arena; current: ArenaCondit
   );
 }
 
-function ArenaPanel(props: { slot: SlotId; arena: Arena; current: ArenaConditions; isRunning: boolean }) {
+function ArenaPanel(props: {
+  slot: SlotId;
+  arena: Arena;
+  current: ArenaConditions;
+  isRunning: boolean;
+  resultDismissed: boolean;
+  onDismissResult: () => void;
+}) {
   const { arena } = props;
   const { hero, enemy, result } = arena.state;
   const last = arena.decisions.at(-1);
@@ -283,7 +311,7 @@ function ArenaPanel(props: { slot: SlotId; arena: Arena; current: ArenaCondition
         <span>平均判断時間 {avg ?? "—"}ms</span>
       </footer>
 
-      {result && (
+      {result && !props.resultDismissed && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-xl bg-slate-950/80">
           <p className={`px-2 text-center text-2xl font-bold ${result === "win" ? "text-amber-300" : "text-rose-400"}`}>
             {result === "win" ? "ドラゴンをやっつけた！" : "ゆうしゃは しんでしまった…"}
@@ -293,8 +321,97 @@ function ArenaPanel(props: { slot: SlotId; arena: Arena; current: ArenaCondition
               `${((arena.endedAt - arena.startedAt) / 1000).toFixed(1)}秒 ・ `}
             行動 {arena.decisions.length}回 ・ 平均判断 {avg ?? "—"}ms
           </p>
+          <button
+            onClick={props.onDismissResult}
+            className="mt-2 rounded px-3 py-1 text-sm text-slate-300 ring-1 ring-slate-600 hover:text-white hover:ring-amber-400"
+          >
+            閉じてログを見る
+          </button>
         </div>
       )}
+      {result && props.resultDismissed && (
+        <p
+          className={`absolute right-4 top-4 rounded px-2 py-0.5 text-xs ${result === "win" ? "bg-amber-400/20 text-amber-300" : "bg-rose-500/20 text-rose-300"}`}
+        >
+          {result === "win" ? "勝利" : "敗北"}
+        </p>
+      )}
+    </section>
+  );
+}
+
+/** 決着後に、3列のログを並べて読み返すためのモーダル */
+function LogModal(props: { arenas: Record<SlotId, Arena>; slots: SlotId[]; onClose: () => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") props.onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [props]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex flex-col bg-slate-950/95 p-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) props.onClose();
+      }}
+    >
+      <header className="mx-auto flex w-full max-w-7xl items-center justify-between pb-3">
+        <h2 className="font-bold">バトルのログ</h2>
+        <button
+          onClick={props.onClose}
+          className="rounded px-3 py-1 text-sm text-slate-300 ring-1 ring-slate-600 hover:text-white hover:ring-amber-400"
+        >
+          閉じる(Esc)
+        </button>
+      </header>
+      <div className="mx-auto grid w-full max-w-7xl flex-1 gap-4 overflow-hidden lg:grid-cols-3">
+        {props.slots.map((id) => (
+          <LogColumn key={id} slot={id} arena={props.arenas[id]} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function LogColumn({ slot, arena }: { slot: SlotId; arena: Arena }) {
+  const avg =
+    arena.decisions.length > 0
+      ? Math.round(arena.decisions.reduce((s, d) => s + d.latencyMs, 0) / arena.decisions.length)
+      : null;
+  // 勇者の行動は、記録された判断と同じ順に並ぶので、何手目かを数えて判断時間を突き合わせる
+  let heroTurn = -1;
+
+  return (
+    <section className="flex min-h-0 flex-col rounded-xl bg-slate-900/60 p-4 ring-1 ring-slate-800">
+      <header className="pb-2">
+        <h3 className={`font-bold ${ACCENTS[slot]}`}>{SLOTS[slot].label}</h3>
+        <p className="text-xs text-slate-400">
+          {arena.state.result === "win" ? "勝利" : arena.state.result === "lose" ? "敗北" : "途中"}
+          {arena.startedAt !== null && arena.endedAt !== null &&
+            ` ・ ${((arena.endedAt - arena.startedAt) / 1000).toFixed(1)}秒`}
+          {" ・ "}行動 {arena.decisions.length}回 ・ 平均判断 {avg ?? "—"}ms
+        </p>
+      </header>
+      <div className="font-dq min-h-0 flex-1 overflow-y-auto rounded-lg border-2 border-slate-100 bg-black px-3 py-2 text-sm leading-relaxed">
+        <p className="text-slate-500">ドラゴンが あらわれた！</p>
+        {arena.log.map((l, i) => {
+          if (l.side === "hero") heroTurn += 1;
+          const decision = l.side === "hero" ? arena.decisions[heroTurn] : undefined;
+          return (
+            <p key={i} className={l.side === "enemy" ? "text-rose-300" : ""}>
+              {l.text}
+              {decision && (
+                <span className="ml-2 font-mono text-xs text-slate-500">
+                  [{decision.latencyMs}ms
+                  {decision.confidence !== undefined && ` / 確信度 ${(decision.confidence * 100).toFixed(0)}%`}]
+                </span>
+              )}
+            </p>
+          );
+        })}
+      </div>
     </section>
   );
 }

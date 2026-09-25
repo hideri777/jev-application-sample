@@ -61,7 +61,7 @@ export interface Arena {
 }
 
 const TURN_PAUSE_MS = 400;
-const MAX_LOG = 40;
+const MAX_LOG = 300;
 
 function freshArena(seed: number, difficulty: Difficulty = "easy"): Arena {
   return {
