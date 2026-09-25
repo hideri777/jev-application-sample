@@ -325,21 +325,19 @@ function TableRow({ row }: { row: Row }) {
   const { inquiry, jev, claude, status } = row;
   return (
     <tr className={`border-t border-slate-800 ${status === "judging" || status === "escalating" ? "animate-pulse" : ""}`}>
-      <td className="px-3 py-2 font-mono text-xs text-slate-500">{inquiry.id}</td>
-      <td className="max-w-md truncate px-3 py-2" title={inquiry.text}>
-        {inquiry.text}
-      </td>
-      <td className="px-3 py-2">
+      <td className="whitespace-nowrap px-3 py-2 align-top font-mono text-xs text-slate-500">{inquiry.id}</td>
+      <td className="w-[34%] px-3 py-2 align-top leading-relaxed">{inquiry.text}</td>
+      <td className="px-3 py-2 align-top">
         {jev ? (
           <>
-            {DEPARTMENTS[jev.department]?.label ?? jev.department}
-            <span className="ml-2 text-xs text-slate-500">{URGENCY_LEVELS[Math.round(jev.urgency)]}</span>
+            <span className="whitespace-nowrap">{DEPARTMENTS[jev.department]?.label ?? jev.department}</span>
+            <span className="block text-xs text-slate-500">{URGENCY_LEVELS[Math.round(jev.urgency)]}</span>
           </>
         ) : (
           <span className="text-slate-600">—</span>
         )}
       </td>
-      <td className="px-3 py-2">
+      <td className="px-3 py-2 align-top">
         {jev && (
           <div className="flex items-center gap-2">
             <div className="h-1.5 w-20 rounded bg-slate-800">
@@ -352,7 +350,7 @@ function TableRow({ row }: { row: Row }) {
           </div>
         )}
       </td>
-      <td className="px-3 py-2">
+      <td className="px-3 py-2 align-top">
         {status === "pending" && <span className="text-slate-600">待機</span>}
         {status === "judging" && <span className="text-slate-400">判定中…</span>}
         {status === "auto" && <span className="text-emerald-300">自動で振り分け</span>}
@@ -360,8 +358,8 @@ function TableRow({ row }: { row: Row }) {
         {status === "escalating" && <span className="text-violet-300">Claude が確認中…</span>}
         {status === "escalated" && claude && (
           <span className="text-violet-200">
-            → {DEPARTMENTS[claude.department]?.label ?? claude.department}
-            <span className="ml-2 text-xs text-slate-400">{claude.reason}</span>
+            <span className="whitespace-nowrap">→ {DEPARTMENTS[claude.department]?.label ?? claude.department}</span>
+            <span className="mt-0.5 block text-xs leading-relaxed text-slate-400">{claude.reason}</span>
           </span>
         )}
         {status === "error" && <span className="text-rose-400">{row.error}</span>}
