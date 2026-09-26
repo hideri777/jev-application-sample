@@ -446,9 +446,8 @@
           <li>今日のデモは、この場でも後からでも触れます</li>
         </ul>
         <aside class="notes">
-          持ち時間30分の配分: 導入(1〜10枚目)8分 → デモ1 バトル(11〜16)9分 → デモ2 一次仕分け(17〜19)5分 →
-          分かったこと・階層・注意(20〜22)4分 → 触ってみて(23)2分 → まとめ(24)1分 → 予備1分。
-          模擬面接(appendix・25)は時間か質疑に余裕があれば見せる。話す内容は docs/script.md。
+          持ち時間30分の配分: 導入(1〜10枚目)8分 → デモ1 バトル(11〜16)10分 → デモ2 一次仕分け(17〜19)5分 →
+          階層・注意点(20〜21)3分 → 触ってみて(22)2分 → まとめ(23)1分 → 予備1分。話す内容は docs/script.md。
         </aside>
       </section>
 
@@ -655,7 +654,7 @@
         </div>
         <aside class="notes">
           段階の間の値が返るのがポイント。「2.31 なので、2 寄りだが 3 に近い」といった判断ができる。
-          appendix の模擬面接では、回答の論理性をこの型で採点している。
+          アプリの模擬面接デモ(/interview)では、回答の論理性をこの型で採点している。
         </aside>
       </section>
 
@@ -960,37 +959,10 @@
         </aside>
       </section>
 
-      <!-- 20. 分かったこと -->
-      <section class="slide">
-        <p class="kicker">LESSONS</p>
-        <h2>作ってみて分かったこと</h2>
-        <div class="row" style="align-items: stretch">
-          <div class="card">
-            <h3>計算はコードで済ませる</h3>
-            <p>Jev は計算・数を数えるのが苦手</p>
-            <p class="small">「次の攻撃で倒れるか」をコードで計算して渡したら、<b>防御ばかりの Jev が戦えるようになった</b></p>
-          </div>
-          <div class="card">
-            <h3>指示の一言が強く効く</h3>
-            <p class="small">「基本は攻撃する」と書いたら、今度は <b>Claude が回復を一度も使わず</b>全敗</p>
-            <p class="small">中立に書き直して、Jev 4/6勝・Haiku 3/6勝に落ち着いた</p>
-          </div>
-          <div class="card">
-            <h3>確信度が迷いを教えてくれる</h3>
-            <p class="small">説明が足りないと、確率が横並び(確信度 6%)になる</p>
-            <p class="small">書き方を見直すサインとして使える</p>
-          </div>
-        </div>
-        <aside class="notes">
-          Jev は「書いた質問を、書いたとおりに」読む。否定語や範囲の言葉にも注意。
-          ここは Jev に限らず、LLM に判断させるとき全般に効く話。
-        </aside>
-      </section>
-
-      <!-- 21. 対応の階層 -->
+      <!-- 20. 対応の階層 -->
       <section class="slide">
         <p class="kicker">WHERE IT FITS</p>
-        <h2>使い分けというより、対応の階層</h2>
+        <h2>対応の階層</h2>
         <div class="row" style="align-items: stretch">
           <div class="card">
             <h3 class="good">層1(Jev)に置くもの</h3>
@@ -1016,11 +988,12 @@
           </p>
         </div>
         <aside class="notes">
-この形は公式ガイドでも「カスケード」としてすすめられている。デモ2がまさにこの形。appendix の模擬面接も同じ考え方。
+この形は公式ガイドでも「カスケード」としてすすめられている。デモ2がまさにこの形。
+アプリには模擬面接のデモ(/interview)もあり、質問は Haiku、採点は Jev、講評は Opus と同じ考え方で分けている。聞かれたら見せる。
         </aside>
       </section>
 
-      <!-- 22. 注意点と批判 -->
+      <!-- 21. 注意点と批判 -->
       <section class="slide">
         <p class="kicker">CAVEATS</p>
         <h2>注意点と、批判的な意見</h2>
@@ -1037,7 +1010,7 @@
         <aside class="notes">持ち上げすぎないように、弱点と批判も紹介しておく。</aside>
       </section>
 
-      <!-- 23. 触ってみてください -->
+      <!-- 22. 触ってみてください -->
       <section class="slide">
         <p class="kicker">TRY IT</p>
         <h2>今すぐ触れます</h2>
@@ -1057,7 +1030,7 @@
         </aside>
       </section>
 
-      <!-- 24. まとめ -->
+      <!-- 23. まとめ -->
       <section class="slide cover">
         <p class="kicker">SUMMARY</p>
         <h1 style="font-size: 60px">まとめ</h1>
@@ -1070,41 +1043,7 @@
         <p class="muted small" style="margin-top: 40px">ありがとうございました 🐉</p>
       </section>
 
-      <!-- 25. Appendix: 模擬面接 -->
-      <section class="slide">
-        <p class="kicker">APPENDIX — 模擬面接</p>
-        <h2>AI を「使い分ける」と、こうなる</h2>
-        <div class="row" style="align-items: stretch">
-          <div class="card">
-            <p class="muted small" style="margin: 0">質問を作る</p>
-            <h3 class="haiku" style="margin-top: 6px">Claude Haiku</h3>
-            <p class="small">文章を書くのは LLM の仕事</p>
-            <div class="big-number haiku" style="font-size: 48px">1回<small> 1.6秒</small></div>
-          </div>
-          <div class="card">
-            <p class="muted small" style="margin: 0">回答中に採点し続ける</p>
-            <h3 class="jev" style="margin-top: 6px">Jev</h3>
-            <p class="small">結論から? 具体例は? 論理性は? を打つたびに</p>
-            <div class="big-number jev" style="font-size: 48px">55回<small> 平均274ms</small></div>
-          </div>
-          <div class="card">
-            <p class="muted small" style="margin: 0">提出したら講評を書く</p>
-            <h3 class="opus" style="margin-top: 6px">Claude Opus</h3>
-            <p class="small">重くて賢い処理は最後の1回だけ</p>
-            <div class="big-number opus" style="font-size: 48px">1回<small> 8.2秒</small></div>
-          </div>
-        </div>
-        <p class="small" style="margin-top: 24px">
-          文字数のチェックは計算なので<b>コード</b>で。「Jev で安く何度も → 難しいところだけ大型 LLM」のカスケード
-        </p>
-        <a class="demo-link" href="/interview">▶ 模擬面接を開く</a>
-        <aside class="notes">
-          時間があれば見せる。「良い回答」「悪い回答」の自動入力ボタンで、Jev の採点がリアルタイムに変わる様子を見せる。
-          悪い回答(「えっと」「たぶん」だらけ)だと、Jev は「自信がなさそう」を確信度100%で当てた。
-        </aside>
-      </section>
-
-      <!-- 26. Appendix: 参考リンク -->
+      <!-- 24. Appendix: 参考リンク -->
       <section class="slide">
         <p class="kicker">APPENDIX</p>
         <h2>参考リンク</h2>
